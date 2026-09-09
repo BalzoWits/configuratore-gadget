@@ -335,41 +335,6 @@ table.commerciale td{white-space:nowrap}
 table.commerciale tbody tr:last-child td{border-bottom:0}
 .com-nota{font-size:.75rem; color:var(--ink-2); line-height:1.5; max-width:80ch}
 
-/* ---------- editor listino ---------- */
-details.editor{background:var(--surface); border:1px solid var(--hair); border-radius:var(--r)}
-details.editor > summary{
-  padding:15px 18px; cursor:pointer; display:flex; align-items:center; gap:10px;
-  font-weight:600; font-size:.9375rem; list-style:none;
-}
-details.editor > summary::-webkit-details-marker{display:none}
-details.editor > summary::after{content:"+"; margin-left:auto; color:var(--ink-3); font-size:1.25rem; line-height:1}
-details.editor[open] > summary::after{content:"−"}
-details.editor[open] > summary{border-bottom:1px solid var(--hair)}
-.ed-body{padding:18px; display:flex; flex-direction:column; gap:18px}
-.ed-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:18px}
-.ed-box{border:1px solid var(--hair); border-radius:var(--r-s); overflow:hidden}
-.ed-box h3{padding:10px 12px; background:var(--surface-2); border-bottom:1px solid var(--hair); font-size:.8125rem}
-.ed-tab{width:100%; border-collapse:collapse; font-size:.8125rem}
-.ed-tab th{
-  background:none; color:var(--ink-3); text-transform:uppercase; letter-spacing:.06em;
-  font-size:.625rem; padding:7px 8px; border-bottom:1px solid var(--hair);
-}
-.ed-tab td{padding:5px 8px; border-bottom:1px solid var(--hair)}
-.ed-tab input{
-  width:74px; padding:5px 7px; text-align:right; border:1px solid var(--hair-strong);
-  border-radius:4px; background:var(--surface);
-  font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums;
-}
-.ed-tab input:hover{border-color:var(--accent-hair)}
-textarea.io{
-  width:100%; min-height:150px; padding:11px; border:1px solid var(--hair-strong);
-  border-radius:var(--r-s); background:var(--surface-2); resize:vertical;
-  font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-size:.75rem; line-height:1.5;
-}
-.ed-note{font-size:.8125rem; color:var(--ink-2); max-width:66ch}
-.esito{font-size:.8125rem; color:var(--good); min-height:1.2em}
-.esito.ko{color:var(--crit)}
-
 footer.piede{max-width:1240px; margin:0 auto; padding:0 22px 40px; color:var(--ink-3); font-size:.75rem; max-width:80ch}
 
 @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
@@ -382,7 +347,7 @@ footer.piede{max-width:1240px; margin:0 auto; padding:0 22px 40px; color:var(--i
   .tw,.com-wrap,.com-box{overflow:visible !important}
   table{page-break-inside:auto}
   tr{page-break-inside:avoid}
-  .topbar,.workbench,details.editor,.barra-az,footer.piede{display:none !important}
+  .topbar,.workbench,.barra-az,footer.piede{display:none !important}
   .panel{border:0}
   .page{padding:0; max-width:none}
   thead th{background:#e8eef0 !important; color:#000 !important}
@@ -530,26 +495,6 @@ footer.piede{max-width:1240px; margin:0 auto; padding:0 22px 40px; color:var(--i
     </div>
   </section>
 
-  <!-- ============ EDITOR LISTINO ============ -->
-  <details class="editor">
-    <summary>Modifica listino</summary>
-    <div class="ed-body">
-      <p class="ed-note">
-        Le modifiche valgono per questa sessione: ricaricando la pagina torna quanto
-        scritto in <code>data.js</code>. Per renderle definitive copia il file qui sotto
-        dentro <code>data.js</code> del progetto.
-      </p>
-      <div class="ed-grid" id="edGrid"></div>
-      <div>
-        <span class="eyebrow">File data.js aggiornato</span>
-        <textarea class="io" id="edOut" readonly spellcheck="false"></textarea>
-        <div class="barra-az" style="padding-left:0; padding-right:0; border:0">
-          <button class="ghost" type="button" id="btnCopiaJson">Copia il file</button>
-          <span class="esito" id="esitoEd"></span>
-        </div>
-      </div>
-    </div>
-  </details>
 
 </div>
 
@@ -566,19 +511,6 @@ footer.piede{max-width:1240px; margin:0 auto; padding:0 22px 40px; color:var(--i
 var K = { righe:"cgp.righe.v1", tema:"cgp.tema.v1" };
 function get(k){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
 function set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
-
-/* Il pannello dei prezzi non compare sul sito pubblico: solo aprendo il file
-   in locale, o aggiungendo #listino all'indirizzo. Non e' una protezione -
-   chi legge il sorgente trova questa riga - ma non c'e' nulla da proteggere:
-   le modifiche vivono nella memoria della scheda e svaniscono al
-   ricaricamento. Serve a non mettere un editor davanti a un cliente. */
-var MODIFICA = (function(){
-  var l=location;
-  var inLocale = l.protocol==="file:" ||
-                 /^(localhost|127\.0\.0\.1|\[::1\])$/.test(l.hostname);
-  var chiesto = /(^|[?&#])listino(=|&|$)/.test(l.search + l.hash);
-  return inLocale || chiesto;
-})();
 
 var nf2 = new Intl.NumberFormat("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2});
 var nf0 = new Intl.NumberFormat("it-IT");
@@ -1232,119 +1164,6 @@ function negliAppunti(testo,esito){
   setTimeout(function(){ if(esito.className==="esito") esito.textContent=""; },4000);
 }
 
-/* ======================= editor listino ======================= */
-function fileDataJs(){
-  /* gli array di soli numeri vanno su una riga sola: il file resta leggibile */
-  var j=JSON.stringify(cat,null,2).replace(
-    /\[\s+((?:-?[\d.]+|null)(?:,\s+(?:-?[\d.]+|null))*)\s+\]/g,
-    function(m,g){ return "["+g.replace(/\s+/g," ")+"]"; }
-  );
-  return "/* Listino generato dal configuratore il "+new Date().toLocaleString("it-IT")+
-         " */\n\n"+"window.CATALOGO = "+j+";\n";
-}
-
-function tuttoZero(o){
-  if(o.prezzo!=null) return !o.prezzo;
-  if(o.prezzi){
-    for(var i=0;i<o.prezzi.length;i++) if(o.prezzi[i]) return false;
-    return true;
-  }
-  return true;
-}
-
-function renderEditor(){
-  if(!MODIFICA) return;
-  var p=prodotto(), grid=document.getElementById("edGrid"); svuota(grid);
-  var etichetteFasce=p.fasce.map(function(f){ return f.etichetta; });
-
-  function fmt(v){ return v==null ? "" : (Math.round(v*100)/100).toFixed(2); }
-  function dopo(){ aggiornaDopoEdit(); }
-
-  /* Un campo prezzo. ammetteVuoto: svuotarlo vale "prezzo non definito". */
-  function campo(etichetta,leggi,scrivi,ammetteVuoto){
-    var inp=el("input",{type:"number",step:"0.01",min:"0","aria-label":etichetta});
-    inp.value=fmt(leggi());
-    if(ammetteVuoto) inp.placeholder="—";
-    inp.onchange=function(){
-      var testo=inp.value.trim();
-      if(!testo){
-        if(ammetteVuoto){ scrivi(null); dopo(); }
-        else inp.value=fmt(leggi());
-        return;
-      }
-      var n=parseFloat(testo.replace(",","."));
-      if(isNaN(n)||n<0){ inp.value=fmt(leggi()); return; }
-      scrivi(r2(n)); dopo();
-    };
-    return inp;
-  }
-  function scatola(titolo,teste){
-    var b=el("div",{class:"ed-box"});
-    b.appendChild(el("h3",null,titolo));
-    var tab=el("table",{class:"ed-tab"}), thead=el("thead"), tr=el("tr");
-    teste.forEach(function(t){ tr.appendChild(el("th",null,t)); });
-    thead.appendChild(tr); tab.appendChild(thead);
-    var tb=el("tbody"); tab.appendChild(tb);
-    b.appendChild(tab); grid.appendChild(b);
-    return tb;
-  }
-  function rigaConCampi(tb,nome,quanti,leggi,scrivi,ammetteVuoto){
-    var t=el("tr");
-    t.appendChild(el("td",null,nome));
-    for(var i=0;i<quanti;i++){
-      (function(i){
-        var td=el("td");
-        td.appendChild(campo(nome+" "+(etichetteFasce[i]||""),
-          function(){ return leggi(i); },
-          function(n){ scrivi(i,n); }, ammetteVuoto));
-        t.appendChild(td);
-      })(i);
-    }
-    tb.appendChild(t);
-  }
-
-  /* costo unita' per fascia — lasciare vuoto significa "da definire" */
-  var tbBase=scatola("Costo unità — "+p.nome, [p.varianti.etichetta].concat(etichetteFasce));
-  p.varianti.voci.forEach(function(v){
-    rigaConCampi(tbBase, v.nome, p.fasce.length,
-      function(i){ return v.prezzi ? v.prezzi[i] : null; },
-      function(i,n){ if(!v.prezzi) v.prezzi=[]; v.prezzi[i]=n; }, true);
-  });
-
-  /* lavorazioni: a prezzo unico oppure una per fascia, secondo come sono scritte */
-  var fisse=[], perFascia=[];
-  p.opzioni.forEach(function(g){
-    function raccogli(nome,o){
-      if(tuttoZero(o) && o.prezzo!=null) return;   /* la voce "nessuna" non si quota */
-      if(o.prezzo!=null) fisse.push({nome:nome,o:o});
-      else if(o.prezzi && !tuttoZero(o)) perFascia.push({nome:nome,o:o});
-    }
-    if(g.tipo==="esclusiva") g.voci.forEach(function(v){ raccogli(g.etichetta+" ("+v.nome+")",v); });
-    else raccogli(g.etichetta,g);
-  });
-
-  if(fisse.length){
-    var tbF=scatola("Lavorazioni · prezzo unico",["Servizio","€/pz"]);
-    fisse.forEach(function(r){
-      rigaConCampi(tbF, r.nome, 1,
-        function(){ return r.o.prezzo; },
-        function(i,n){ r.o.prezzo = n==null ? 0 : n; }, false);
-    });
-  }
-  if(perFascia.length){
-    var tbS=scatola("Lavorazioni · prezzo per fascia",["Servizio"].concat(etichetteFasce));
-    perFascia.forEach(function(r){
-      rigaConCampi(tbS, r.nome, p.fasce.length,
-        function(i){ return r.o.prezzi[i]; },
-        function(i,n){ r.o.prezzi[i] = n==null ? 0 : n; }, false);
-    });
-  }
-
-  document.getElementById("edOut").value=fileDataJs();
-}
-
-
-
 /* ======================= orchestrazione ======================= */
 function setQta(q){
   q=Math.max(1,Math.round(q||0));
@@ -1383,14 +1202,6 @@ function renderCalcolo(){
   renderCommerciale();
 }
 
-/* Aggiornamento leggero dopo una modifica nell'editor: non ricostruisce l'editor
-   stesso, cosi' il campo che stai compilando non sparisce da sotto il cursore. */
-function aggiornaDopoEdit(){
-  renderCalcolo();
-  renderRighe();
-  if(MODIFICA) document.getElementById("edOut").value=fileDataJs();
-}
-
 function renderTutto(){
   renderTabs();
   renderProdotto();
@@ -1398,7 +1209,6 @@ function renderTutto(){
   renderQta();
   renderCalcolo();
   renderRighe();
-  renderEditor();
 }
 
 /* --- tema: auto → chiaro → scuro --- */
@@ -1468,16 +1278,6 @@ function avvio(){
   document.getElementById("btnSvuota").onclick=function(){
     S.righe=[]; set(K.righe,S.righe); renderRighe();
   };
-
-  var pannello=document.querySelector("details.editor");
-  if(MODIFICA){
-    document.getElementById("btnCopiaJson").onclick=function(){
-      negliAppunti(document.getElementById("edOut").value,document.getElementById("esitoEd"));
-    };
-  } else if(pannello){
-    /* rimosso dal documento: non basta nasconderlo */
-    pannello.parentNode.removeChild(pannello);
-  }
 
   renderTutto();
 }

@@ -62,47 +62,38 @@ Togli il flag quando hai i numeri veri.
 
 ## Modificare i prezzi
 
-**`data.js` ha sempre l'ultima parola**: quello che c'è scritto è quello che la
-pagina mostra, a ogni ricaricamento. È JSON puro, solo la prima riga
-(`window.CATALOGO =`) è codice.
+Si cambiano **soltanto in `data.js`**, con un editor di testo, e diventano
+effettivi con un commit sul ramo `main`. Non esiste nessun pannello di modifica
+nella pagina: e' l'unico modo per cambiare quello che vedono gli altri, ed e'
+riservato a chi ha accesso al repository.
 
-> Perché `data.js` e non `data.json`: un `.json` va letto con `fetch()`, che i
-> browser bloccano quando la pagina è aperta con doppio click (`file://`).
+`data.js` e' JSON puro: solo la prima riga (`window.CATALOGO =`) e' codice.
 
-Il pannello *Modifica listino* in fondo alla pagina serve per **provare** dei
-prezzi: le modifiche valgono per la sessione, e il riquadro in basso genera il
-contenuto aggiornato di `data.js` da copiare nel file per renderle definitive.
+> Perche' `data.js` e non `data.json`: un `.json` va letto con `fetch()`, che i
+> browser bloccano quando la pagina e' aperta con doppio click (`file://`).
 
-### Il pannello non compare sul sito pubblico
+```bash
+# modifica data.js con un editor di testo, poi:
+git add data.js
+git commit -m "Aggiornamento listino"
+git push        # il sito si aggiorna da se' in circa un minuto
+```
 
-*Modifica listino* si vede solo in due casi:
+Per provare un prezzo prima di pubblicarlo, cambia `data.js` e apri
+`index.html` con doppio click: vedi subito l'effetto in locale, e il sito
+pubblico resta quello di prima finche' non fai il push.
 
-- aprendo `index.html` in locale (doppio click, oppure `localhost`);
-- aggiungendo `#listino` all'indirizzo:
-  `https://balzowits.github.io/configuratore-gadget/#listino`
+### Cosa e' pubblico
 
-Altrimenti il pannello viene **rimosso dal documento**, non solo nascosto: a un
-cliente non deve comparire un editor.
+Il listino sta in un file servito da un sito pubblico: chiunque conosca
+l'indirizzo puo' leggerlo, anche direttamente da
+`https://balzowits.github.io/configuratore-gadget/data.js`, e i motori di
+ricerca possono indicizzarlo. **Se dei valori non devono uscire, non vanno
+messi in questo file.** Nessuna misura lato pagina cambia questo: una password
+nel codice si legge nei sorgenti, e un login GitHub richiederebbe un server.
 
-Attenzione a cosa questo e' e cosa non e':
-
-- **non e' una protezione.** Chi apre i sorgenti trova la parola `listino`.
-  Una password nel codice avrebbe lo stesso difetto, con in piu' l'illusione
-  della sicurezza; un login GitHub e' impossibile su un sito statico, perche'
-  servirebbe un server a custodire il segreto OAuth.
-- **non c'e' nulla da proteggere in scrittura.** Le modifiche fatte nel
-  pannello vivono nella memoria della scheda e svaniscono al ricaricamento:
-  nessuno puo' alterare i prezzi visti dagli altri. La fonte e' `data.js`, che
-  si cambia solo con un commit.
-- **i prezzi restano pubblici comunque.** La pagina li mostra per funzionare, e
-  `data.js` si scarica da
-  `https://balzowits.github.io/configuratore-gadget/data.js`. Nascondere il
-  pannello non cambia questo di un byte: se dei valori non devono uscire, non
-  vanno messi in un file pubblicato.
-
-Nell'anteprima su claude.ai il pannello non compare: la pagina gira in una
-cornice che non vede la barra degli indirizzi, quindi `#listino` non la
-raggiunge. Per usarlo, apri il file in locale o il sito con la chiave.
+Nessuno puo' invece *modificare* i prezzi: per farlo serve un commit sul
+repository.
 
 ### Struttura di un prodotto
 
