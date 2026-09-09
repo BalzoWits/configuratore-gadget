@@ -165,19 +165,40 @@ fonte: cambi un prezzo e le tabelle si rigenerano.
 *Stampa / PDF* stampa solo queste tabelle; il pulsante omonimo nel preventivo
 stampa solo il preventivo.
 
-## Pubblicare su GitHub Pages
+## Il sito pubblicato
+
+**https://balzowits.github.io/configuratore-gadget/**
+
+Repository: https://github.com/BalzoWits/configuratore-gadget (pubblico, ramo
+`main`, Pages servito dalla radice).
+
+Per aggiornare il sito basta un commit sul ramo `main`: Pages ricompila da se'
+in un minuto circa.
 
 ```bash
 cd preventivatore-gadget
 git add -A
 git commit -m "Aggiornamento listino"
-git remote add origin https://github.com/<utente>/<repo>.git
-git branch -M main
-git push -u origin main
+git push
 ```
 
-Poi su GitHub: **Settings → Pages → Source: Deploy from a branch → main /
-(root) → Save**. Dopo un minuto il sito è su `https://<utente>.github.io/<repo>/`.
+### Certificati in rete aziendale
+
+Il proxy aziendale ispeziona il traffico TLS, quindi git non riconosceva il
+certificato di github.com. Il repository ha gia' la configurazione che serve
+(locale, non globale):
+
+```bash
+git config http.sslBackend schannel        # usa l'archivio certificati di Windows,
+                                           # dove sta la CA aziendale
+git config http.schannelCheckRevoke false  # il proxy non pubblica una CRL
+                                           # raggiungibile: si salta SOLO questo
+                                           # controllo, la verifica del
+                                           # certificato resta attiva
+```
+
+Servono di nuovo se cloni il repository su un'altra postazione della stessa rete.
+Non usare `http.sslVerify false`: disattiverebbe la verifica del certificato.
 
 ## Note
 
