@@ -814,7 +814,8 @@ function renderOpzioni(){
         lab.appendChild(inp);
         lab.appendChild(el("span",{class:"nm"},v.nome));
         var pv=prezzoVoce(v,idx);
-        lab.appendChild(el("span",{class:"pz num"}, pv ? "+"+eur(pv) : "incluso"));
+        lab.appendChild(el("span",{class:"pz num"},
+          pv ? "+"+eur(pv) : (g.sempre ? "" : "incluso")));
         seg.appendChild(lab);
       });
       gr.appendChild(seg);
@@ -1047,7 +1048,9 @@ function descrizioneOpzioni(p,opz){
         if(v.id!==opz[g.id]) return;
         var costo=false;
         for(var i=0;i<p.fasce.length;i++) if(prezzoVoce(v,i)) costo=true;
-        if(costo) out.push(g.etichetta+" "+v.nome);
+        /* "sempre": e' una caratteristica del prodotto (il colore), non un
+           extra, quindi va detta anche quando non ha sovrapprezzo */
+        if(costo || g.sempre) out.push(g.etichetta+" "+v.nome);
       });
     } else if(opz[g.id]) out.push(g.etichetta);
   });

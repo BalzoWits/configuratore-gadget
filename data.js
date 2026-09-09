@@ -13,7 +13,7 @@
    un solo prezzo per modello e una sola percentuale per fascia.
 
    Questo file ha sempre l'ultima parola: quello che scrivi qui e' quello che
-   la pagina mostra, a ogni ricaricamento.
+   la pagina mostra, a ogni ricaricamento. Diventa effettivo con un commit.
    ========================================================================= */
 
 window.CATALOGO = {
@@ -27,7 +27,7 @@ window.CATALOGO = {
       "caratteristiche": [
         "Design compatto e resistente",
         "Ampia area per la personalizzazione",
-        "Disponibile in diverse capacita'"
+        "Disponibile in diverse capacita' e colori"
       ],
       "qtaMinima": 30,
 
@@ -57,6 +57,20 @@ window.CATALOGO = {
 
       "opzioni": [
         {
+          "id": "colore",
+          "etichetta": "Colore",
+          "tipo": "esclusiva",
+          /* "sempre": la scelta compare nelle descrizioni anche se non costa
+             nulla, perche' e' una caratteristica del prodotto e non un extra.
+             Se un colore dovesse costare di piu', basta dargli un "prezzo". */
+          "sempre": true,
+          "voci": [
+            { "id": "nera",  "nome": "Nera",  "prezzo": 0 },
+            { "id": "blu",   "nome": "Blu",   "prezzo": 0 },
+            { "id": "rossa", "nome": "Rossa", "prezzo": 0 }
+          ]
+        },
+        {
           "id": "incisione",
           "etichetta": "Incisione laser",
           "tipo": "esclusiva",
@@ -72,16 +86,20 @@ window.CATALOGO = {
       ],
 
       /* ANTEPRIMA — immagini che si accendono con le scelte.
-         "livelli": PNG sovrapposti alla foto di base, stessa inquadratura.
+         L'ORDINE CONTA: i livelli si impilano come sono scritti qui, quindi i
+         colori stanno per primi e incisione, catenella e scritta si disegnano
+         sopra di loro. Tutti i livelli sovrapposti hanno la stessa
+         inquadratura e la stessa dimensione della foto di base.
          "separato": true per un accessorio fotografato a parte, che non si
-         sovrappone: viene mostrato come immagine a fianco.
+         sovrappone e viene mostrato a fianco.
          Con "valori" il livello si accende se la scelta esclusiva vale uno di
-         quelli, senza si accende quando la spunta e' attiva.
-         Togli "anteprima" e il prodotto non mostra illustrazione. */
+         quelli, senza si accende quando la spunta e' attiva. */
       "anteprima": {
         "proporzioni": [1080, 1080],
         "base": "img/chiavetta.png",
         "livelli": {
+          "coloreBlu":   { "img": "img/chiavetta-blu.jpg",   "opzione": "colore", "valori": ["blu"] },
+          "coloreRossa": { "img": "img/chiavetta-rossa.jpg", "opzione": "colore", "valori": ["rossa"] },
           "incisione":   { "img": "img/incisione.png", "opzione": "incisione",
                            "valori": ["1lato", "2lati"] },
           "catenella":   { "img": "img/catenella.png", "opzione": "catenella" },
@@ -95,7 +113,10 @@ window.CATALOGO = {
       "preimpostato": {
         "variante": "2gb",
         "qta": 30,
-        "opzioni": { "incisione": "2lati", "catenella": true, "dati": true, "portachiavi": true }
+        "opzioni": {
+          "colore": "nera", "incisione": "2lati",
+          "catenella": true, "dati": true, "portachiavi": true
+        }
       }
     }
   ]

@@ -155,18 +155,38 @@ trasparenti; gli accessori fotografati a parte compaiono a fianco.
 "anteprima": {
   "proporzioni": [1080, 1080],
   "base": "img/chiavetta.png",
+  // L'ORDINE CONTA: i livelli si impilano come sono scritti qui.
   "livelli": {
+    // i colori per primi: coprono la base, e il resto si disegna sopra
+    "coloreBlu":   { "img": "img/chiavetta-blu.jpg",   "opzione": "colore", "valori": ["blu"] },
+    "coloreRossa": { "img": "img/chiavetta-rossa.jpg", "opzione": "colore", "valori": ["rossa"] },
     // con "valori": si accende se la scelta esclusiva vale uno di quelli
-    "incisione": { "img": "img/incisione.png", "opzione": "incisione",
-                   "valori": ["1lato", "2lati"] },
+    "incisione":   { "img": "img/incisione.png", "opzione": "incisione",
+                     "valori": ["1lato", "2lati"] },
     // senza "valori": si accende quando la spunta e' attiva
-    "catenella": { "img": "img/catenella.png", "opzione": "catenella" },
+    "catenella":   { "img": "img/catenella.png", "opzione": "catenella" },
     // "separato": non si sovrappone, viene mostrato come immagine a fianco
     "portachiavi": { "img": "img/portachiavi.png", "opzione": "portachiavi",
                      "separato": true, "didascalia": "Portachiavi personalizzato" }
   }
 }
 ```
+
+### Il colore
+
+Il colore e' una **scelta esclusiva senza sovrapprezzo**, e nell'anteprima
+funziona per sovrapposizione: la foto colorata copre quella di base, poi
+incisione, catenella e scritta si disegnano sopra. Le tre foto sono allineate
+al pixel (stesso riquadro, scostamento zero), verificato prima di usarle.
+
+L'opzione e' marcata `"sempre": true`: significa che compare nelle descrizioni
+e nelle righe di preventivo anche se non costa nulla, perche' e' una
+caratteristica del prodotto e non un extra. Se un colore dovesse costare di
+piu', basta dargli un `"prezzo"`.
+
+Per aggiungere un colore servono una foto con la stessa inquadratura, una voce
+in `opzioni.colore.voci` e un livello in `anteprima.livelli` messo **prima**
+degli altri.
 
 Requisito per i livelli sovrapposti: **stessa inquadratura e stessa dimensione**
 della foto di base, altrimenti non combaciano. Un accessorio ripreso in un'altra

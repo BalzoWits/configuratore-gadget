@@ -1,13 +1,20 @@
 IMMAGINI DELL'ANTEPRIMA
 
-Livelli sovrapposti alla foto di base (stessa inquadratura, 1080x1080):
-  chiavetta.png    foto di base
-  incisione.png    "your logo here" sul corpo    -> opzione incisione laser
-  catenella.png    catenella nel foro            -> opzione catenella
-  dati.png         scritta "DATI CARICATI"       -> opzione caricamento dati
+Livelli sovrapposti (stessa inquadratura, 1080x1080). L'ordine in data.js e'
+l'ordine di impilamento: prima i colori, poi tutto il resto sopra.
+
+  chiavetta.png         foto di base, nera
+  chiavetta-blu.jpg     copre la base                -> colore blu
+  chiavetta-rossa.jpg   copre la base                -> colore rosso
+  incisione.png         "your logo here" sul corpo   -> incisione laser
+  catenella.png         catenella nel foro           -> catenella
+  dati.png              scritta "DATI CARICATI"      -> caricamento dati
 
 Accessorio fotografato a parte (non si sovrappone, sta a fianco):
-  portachiavi.png  portachiavi in gomma con anello -> opzione portachiavi
+  portachiavi.png       portachiavi in gomma con anello -> portachiavi
+
+I colori sono in JPEG perche' coprono tutto il fotogramma e non servono
+trasparenze: 38 e 41 KB invece di 421 e 441.
 
 REGOLA per i livelli sovrapposti: stessa inquadratura e stessa dimensione della
 foto di base. Se un'immagine e' ripresa in un'altra posizione, va dichiarata
