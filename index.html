@@ -567,6 +567,19 @@ var K = { righe:"cgp.righe.v1", tema:"cgp.tema.v1" };
 function get(k){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
 function set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 
+/* Il pannello dei prezzi non compare sul sito pubblico: solo aprendo il file
+   in locale, o aggiungendo #listino all'indirizzo. Non e' una protezione -
+   chi legge il sorgente trova questa riga - ma non c'e' nulla da proteggere:
+   le modifiche vivono nella memoria della scheda e svaniscono al
+   ricaricamento. Serve a non mettere un editor davanti a un cliente. */
+var MODIFICA = (function(){
+  var l=location;
+  var inLocale = l.protocol==="file:" ||
+                 /^(localhost|127\.0\.0\.1|\[::1\])$/.test(l.hostname);
+  var chiesto = /(^|[?&#])listino(=|&|$)/.test(l.search + l.hash);
+  return inLocale || chiesto;
+})();
+
 var nf2 = new Intl.NumberFormat("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2});
 var nf0 = new Intl.NumberFormat("it-IT");
 function eur(v){ return nf2.format(v)+" €"; }
@@ -1240,6 +1253,7 @@ function tuttoZero(o){
 }
 
 function renderEditor(){
+  if(!MODIFICA) return;
   var p=prodotto(), grid=document.getElementById("edGrid"); svuota(grid);
   var etichetteFasce=p.fasce.map(function(f){ return f.etichetta; });
 
@@ -1374,7 +1388,7 @@ function renderCalcolo(){
 function aggiornaDopoEdit(){
   renderCalcolo();
   renderRighe();
-  document.getElementById("edOut").value=fileDataJs();
+  if(MODIFICA) document.getElementById("edOut").value=fileDataJs();
 }
 
 function renderTutto(){
@@ -1455,9 +1469,15 @@ function avvio(){
     S.righe=[]; set(K.righe,S.righe); renderRighe();
   };
 
-  document.getElementById("btnCopiaJson").onclick=function(){
-    negliAppunti(document.getElementById("edOut").value,document.getElementById("esitoEd"));
-  };
+  var pannello=document.querySelector("details.editor");
+  if(MODIFICA){
+    document.getElementById("btnCopiaJson").onclick=function(){
+      negliAppunti(document.getElementById("edOut").value,document.getElementById("esitoEd"));
+    };
+  } else if(pannello){
+    /* rimosso dal documento: non basta nasconderlo */
+    pannello.parentNode.removeChild(pannello);
+  }
 
   renderTutto();
 }
