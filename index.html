@@ -778,8 +778,8 @@ function renderQta(){
   rng.value=S.qta;
 
   var chips=document.getElementById("qtaChips"); svuota(chips);
-  /* una pastiglia per fascia: il minimo che la fa scattare */
-  p.fasce.map(function(f){ return f.min; }).forEach(function(q){
+  /* una pastiglia per fascia: la quantita' di riferimento del listino */
+  p.fasce.map(qtaRiferimento).forEach(function(q){
     var b=el("button",{type:"button"},nf0.format(q));
     b.onclick=function(){ setQta(q); };
     chips.appendChild(b);
@@ -787,12 +787,14 @@ function renderQta(){
 }
 
 function renderNastro(c){
-  var p=prodotto(), box=document.getElementById("nastro");
+  var p=prodotto(), v=variante(p,S.varianteId), box=document.getElementById("nastro");
   svuota(box);
   p.fasce.forEach(function(f,i){
-    var d=el("div",{class:"f"+(i===c.idx?" on":"")});
+    var d=el("div",{class:"f"+(i===c.idx?" on":"")}), pz=prezzoVoce(v,i);
     d.appendChild(el("span",null,f.etichetta));
-    d.appendChild(el("span",{class:"p"}, f.sconto ? "−"+f.sconto+"%" : "listino"));
+    /* il costo unita' della fascia, piu' lo sconto se ce n'e' uno */
+    d.appendChild(el("span",{class:"p"}, pz==null ? "—" : eur(pz)));
+    if(f.sconto) d.appendChild(el("span",{class:"p"},"−"+f.sconto+"%"));
     box.appendChild(d);
   });
 }
@@ -944,45 +946,57 @@ function renderRiepilogo(c){
 
 function qtaRiferimento(f){ return f.riferimento || f.min; }
 
+/* Le tabelle per il cliente: una colonna per fascia di quantita', come il
+   listino del fornitore. Colonne semplici, nessuna cella a due righe: e' cio'
+   che teneva i numeri disallineati. Le stesse strutture servono al rendering,
+   alla stampa e alla copia per Excel. */
 function tabelleCommerciali(){
   var p=prodotto(), t=[];
+  var teste=p.fasce.map(function(f){ return f.etichetta; });
 
-  /* 1. costo unita' per modello */
+  function celle(voce){
+    return p.fasce.map(function(f,i){
+      var pz=prezzoVoce(voce,i);
+      return pz==null ? "—" : nf2.format(pz);
+    });
+  }
+
+  /* costo unita' per modello */
   t.push({
-    titolo:"Costo unità",
-    teste:[p.varianti.etichetta,"@/pz"],
+    titolo:"Costo unità (@/pz)",
+    teste:[p.varianti.etichetta].concat(teste),
     righe:p.varianti.voci.map(function(v){
-      var pz=prezzoVoce(v,0);
-      return [ v.nome+(v.provvisorio?" *":""), pz==null?"—":nf2.format(pz) ];
+      return [v.nome+(v.provvisorio?" *":"")].concat(celle(v));
     })
   });
 
-  /* 2. lavorazioni, prezzo unitario fisso */
+  /* lavorazioni: ogni voce a pagamento, con il suo prezzo per fascia */
   var lav=[];
   p.opzioni.forEach(function(g){
     if(g.tipo==="esclusiva"){
       g.voci.forEach(function(v){
-        var pz=prezzoVoce(v,0);
-        if(pz) lav.push([g.etichetta+" "+v.nome, "+"+nf2.format(pz)]);
+        var somma=0;
+        p.fasce.forEach(function(f,i){ somma += prezzoVoce(v,i)||0; });
+        if(somma) lav.push([g.etichetta+" "+v.nome].concat(celle(v)));
       });
     } else {
-      var pz2=prezzoVoce(g,0);
-      if(pz2) lav.push([g.etichetta, "+"+nf2.format(pz2)]);
+      var s2=0;
+      p.fasce.forEach(function(f,i){ s2 += prezzoVoce(g,i)||0; });
+      if(s2) lav.push([g.etichetta].concat(celle(g)));
     }
   });
-  t.push({ titolo:"Lavorazioni", teste:["Servizio","@/pz"], righe:lav });
+  t.push({ titolo:"Lavorazioni (+@/pz)", teste:["Servizio"].concat(teste), righe:lav });
 
-  /* 3. sconti per quantita', sulla configurazione corrente */
+  /* la configurazione scelta, alle quantita' di riferimento */
   t.push({
-    titolo:"Sconti per quantità",
-    teste:["Quantità","Sconto","@/pz","Totale"],
+    titolo:"Questa configurazione",
+    teste:["Quantità","@/pz","Totale"],
     righe:p.fasce.map(function(f){
       var q=qtaRiferimento(f), k=calcola(p,S.varianteId,q,S.opzioni);
       return [
-        f.etichetta,
-        f.sconto ? "−"+f.sconto+"%" : "listino",
+        nf0.format(q)+" pz",
         k.unitario==null ? "—" : nf2.format(k.unitario),
-        k.totale==null ? "—" : nf2.format(k.totale)+" ("+nf0.format(q)+" pz)"
+        k.totale==null ? "—" : nf2.format(k.totale)
       ];
     })
   });
@@ -1016,10 +1030,12 @@ function renderCommerciale(){
   var lav=descrizioneOpzioni(p,S.opzioni);
   var provv=p.varianti.voci.filter(function(v){ return v.provvisorio; })
                           .map(function(v){ return v.nome; });
-  var testo="Prezzi unitari in euro. Lo sconto della fascia si applica al totale, "+
-            "lavorazioni comprese. La colonna dei totali usa il modello "+
-            variante(p,S.varianteId).nome+" con: "+
-            (lav.length ? lav.join(", ") : "nessuna lavorazione")+".";
+  var testo="Prezzi unitari in euro. Il costo unit\u00e0 e le "+
+            "lavorazioni dipendono dalla fascia di quantit\u00e0 raggiunta. "+
+            "L'ultima tabella usa il modello "+variante(p,S.varianteId).nome+" con: "+
+            (lav.length ? lav.join(", ") : "nessuna lavorazione")+
+            ". Il listino del fornitore si ferma a 100 pezzi: oltre, i prezzi "+
+            "della fascia 51+ vanno confermati.";
   if(provv.length) testo+=" (*) costo unit"+"\u00e0"+" provvisorio per "+provv.join(" e ")+
                           ", da confermare con il fornitore.";
   document.getElementById("comNota").textContent=testo;

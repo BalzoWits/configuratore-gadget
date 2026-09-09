@@ -5,19 +5,23 @@
    quando la pagina viene aperta con doppio click (protocollo file://).
 
    COME SI FORMA IL PREZZO
-     1. costo unita' del modello + prezzo delle lavorazioni scelte = prezzo di listino
-     2. meno lo sconto della fascia di quantita' raggiunta = prezzo unitario
-     3. per il numero di pezzi = totale
+     1. costo unita' del modello nella fascia raggiunta
+     2. piu' il prezzo delle lavorazioni scelte, nella stessa fascia
+     3. meno l'eventuale sconto della fascia (oggi zero: gli sconti sono gia'
+        dentro i prezzi, che scendono al crescere della quantita')
+     4. per il numero di pezzi = totale
 
-   Lo sconto si applica a TUTTO (chiavetta e lavorazioni), non solo al prodotto:
-   un solo prezzo per modello e una sola percentuale per fascia.
+   Due modi di scrivere un prezzo:
+     "prezzo": 0.80              valore unico, uguale in tutte le fasce
+     "prezzi": [1.00, 0.90, 0.80] un valore per fascia, nell'ordine delle fasce
+                                  (null = prezzo non ancora definito)
 
    Questo file ha sempre l'ultima parola: quello che scrivi qui e' quello che
    la pagina mostra, a ogni ricaricamento. Diventa effettivo con un commit.
    ========================================================================= */
 
 window.CATALOGO = {
-  "note": "Il prezzo di listino non dipende dalla quantita': lo sconto di fascia si applica al totale, lavorazioni comprese.",
+  "note": "Il costo unita' e il prezzo delle lavorazioni scendono al crescere della quantita': ogni fascia ha i suoi valori.",
 
   "prodotti": [
     {
@@ -29,29 +33,29 @@ window.CATALOGO = {
         "Ampia area per la personalizzazione",
         "Disponibile in diverse capacita' e colori"
       ],
-      "qtaMinima": 30,
+      "qtaMinima": 1,
 
-      /* Fasce di quantita' e sconto sul totale. "riferimento" e' la quantita'
-         usata come esempio nella tabella commerciale.
-         Aggiungere uno scaglione = aggiungere una riga qui. */
+      /* Fasce di quantita'. "riferimento" e' la quantita' usata come esempio
+         nella tabella commerciale e nelle pastiglie di scelta rapida.
+         "sconto" e' una percentuale sul totale: oggi zero perche' gli sconti
+         sono gia' nei prezzi di ogni fascia. Se un domani servisse uno sconto
+         ulteriore (promozioni, clienti fissi), basta valorizzarlo qui.
+
+         NOTA: il listino del fornitore si ferma a 100 pezzi. L'ultima fascia
+         e' aperta (51 e oltre) per poter preventivare ordini piu' grandi, ma
+         oltre i 100 pezzi i prezzi vanno confermati. */
       "fasce": [
-        { "min": 30,  "max": 49,   "etichetta": "30 - 49 pz",   "sconto": 0,  "riferimento": 30 },
-        { "min": 50,  "max": 99,   "etichetta": "50 - 99 pz",   "sconto": 5,  "riferimento": 50 },
-        { "min": 100, "max": 249,  "etichetta": "100 - 249 pz", "sconto": 10, "riferimento": 100 },
-        { "min": 250, "max": 499,  "etichetta": "250 - 499 pz", "sconto": 15, "riferimento": 250 },
-        { "min": 500, "max": null, "etichetta": "500+ pz",       "sconto": 20, "riferimento": 500 }
+        { "min": 1,  "max": 30,   "etichetta": "1 - 30 pz",  "sconto": 0, "riferimento": 30 },
+        { "min": 31, "max": 50,   "etichetta": "31 - 50 pz", "sconto": 0, "riferimento": 50 },
+        { "min": 51, "max": null, "etichetta": "51+ pz",     "sconto": 0, "riferimento": 100 }
       ],
 
-      /* ATTENZIONE: solo il 2 GB ha un prezzo confermato (2,00, dal listino
-         del fornitore). 4 GB e 8 GB sono PROVVISORI, scelti per rendere il
-         configuratore utilizzabile: "provvisorio": true li fa segnalare
-         nell'anteprima e nella tabella. Togli il flag quando hai i veri. */
       "varianti": {
         "etichetta": "Modello",
         "voci": [
-          { "id": "2gb", "nome": "2 GB", "prezzo": 2.00 },
-          { "id": "4gb", "nome": "4 GB", "prezzo": 2.20, "provvisorio": true },
-          { "id": "8gb", "nome": "8 GB", "prezzo": 2.50, "provvisorio": true }
+          { "id": "2gb", "nome": "2 GB", "prezzi": [3.20, 3.00, 2.90] },
+          { "id": "4gb", "nome": "4 GB", "prezzi": [3.60, 3.40, 3.30] },
+          { "id": "8gb", "nome": "8 GB", "prezzi": [3.80, 3.50, 3.40] }
         ]
       },
 
@@ -62,7 +66,7 @@ window.CATALOGO = {
           "tipo": "esclusiva",
           /* "sempre": la scelta compare nelle descrizioni anche se non costa
              nulla, perche' e' una caratteristica del prodotto e non un extra.
-             Se un colore dovesse costare di piu', basta dargli un "prezzo". */
+             Se un colore dovesse costare di piu', basta dargli un prezzo. */
           "sempre": true,
           "voci": [
             { "id": "nera",  "nome": "Nera",  "prezzo": 0 },
@@ -76,20 +80,31 @@ window.CATALOGO = {
           "tipo": "esclusiva",
           "voci": [
             { "id": "no",    "nome": "Nessuna incisione", "prezzo": 0 },
-            { "id": "1lato", "nome": "1 lato",            "prezzo": 0.80 },
-            { "id": "2lati", "nome": "2 lati",            "prezzo": 1.20 }
+            { "id": "1lato", "nome": "1 lato",  "prezzi": [1.00, 0.90, 0.80] },
+            { "id": "2lati", "nome": "2 lati",  "prezzi": [1.40, 1.30, 1.20] }
           ]
         },
-        { "id": "catenella",   "etichetta": "Catenella standard", "tipo": "flag", "prezzo": 0.20 },
-        { "id": "dati",        "etichetta": "Caricamento dati",   "tipo": "flag", "prezzo": 0.35 },
-        { "id": "portachiavi", "etichetta": "Portachiavi",        "tipo": "flag", "prezzo": 1.20 }
+        {
+          /* nel listino le due voci stanno nella stessa colonna e costano
+             uguale: sono alternative, si aggancia una cosa sola al foro */
+          "id": "portachiavi",
+          "etichetta": "Portachiavi",
+          "tipo": "esclusiva",
+          "voci": [
+            { "id": "no",        "nome": "Nessuno",   "prezzo": 0 },
+            { "id": "catenella", "nome": "Catenella", "prezzi": [0.40, 0.35, 0.30] },
+            { "id": "anello",    "nome": "Anello",    "prezzi": [0.40, 0.35, 0.30] }
+          ]
+        },
+        { "id": "dati", "etichetta": "Caricamento dati", "tipo": "flag",
+          "prezzi": [0.50, 0.35, 0.20] }
       ],
 
       /* ANTEPRIMA — immagini che si accendono con le scelte.
          L'ORDINE CONTA: i livelli si impilano come sono scritti qui, quindi i
-         colori stanno per primi e incisione, catenella e scritta si disegnano
-         sopra di loro. Tutti i livelli sovrapposti hanno la stessa
-         inquadratura e la stessa dimensione della foto di base.
+         colori stanno per primi e il resto si disegna sopra di loro. Tutti i
+         livelli sovrapposti hanno la stessa inquadratura e la stessa
+         dimensione della foto di base.
          "separato": true per un accessorio fotografato a parte, che non si
          sovrappone e viene mostrato a fianco.
          Con "valori" il livello si accende se la scelta esclusiva vale uno di
@@ -102,10 +117,12 @@ window.CATALOGO = {
           "coloreRossa": { "img": "img/chiavetta-rossa.jpg", "opzione": "colore", "valori": ["rossa"] },
           "incisione":   { "img": "img/incisione.png", "opzione": "incisione",
                            "valori": ["1lato", "2lati"] },
-          "catenella":   { "img": "img/catenella.png", "opzione": "catenella" },
-          "dati":        { "img": "img/dati.png",      "opzione": "dati" },
-          "portachiavi": { "img": "img/portachiavi.png", "opzione": "portachiavi",
-                           "separato": true, "didascalia": "Portachiavi personalizzato" }
+          "catenella":   { "img": "img/catenella.png", "opzione": "portachiavi",
+                           "valori": ["catenella"] },
+          "dati":        { "img": "img/dati.png", "opzione": "dati" },
+          "anello":      { "img": "img/portachiavi.png", "opzione": "portachiavi",
+                           "valori": ["anello"], "separato": true,
+                           "didascalia": "Anello portachiavi" }
         }
       },
 
@@ -115,7 +132,7 @@ window.CATALOGO = {
         "qta": 30,
         "opzioni": {
           "colore": "nera", "incisione": "2lati",
-          "catenella": true, "dati": true, "portachiavi": true
+          "portachiavi": "catenella", "dati": true
         }
       }
     }

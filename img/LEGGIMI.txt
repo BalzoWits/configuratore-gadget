@@ -4,14 +4,14 @@ Livelli sovrapposti (stessa inquadratura, 1080x1080). L'ordine in data.js e'
 l'ordine di impilamento: prima i colori, poi tutto il resto sopra.
 
   chiavetta.png         foto di base, nera
-  chiavetta-blu.jpg     copre la base                -> colore blu
-  chiavetta-rossa.jpg   copre la base                -> colore rosso
-  incisione.png         "your logo here" sul corpo   -> incisione laser
-  catenella.png         catenella nel foro           -> catenella
-  dati.png              scritta "DATI CARICATI"      -> caricamento dati
+  chiavetta-blu.jpg     copre la base              -> colore blu
+  chiavetta-rossa.jpg   copre la base              -> colore rosso
+  incisione.png         "your logo here" sul corpo -> incisione laser
+  catenella.png         catenella nel foro         -> portachiavi: catenella
+  dati.png              scritta "DATI CARICATI"    -> caricamento dati
 
 Accessorio fotografato a parte (non si sovrappone, sta a fianco):
-  portachiavi.png       portachiavi in gomma con anello -> portachiavi
+  portachiavi.png       portachiavi in gomma con anello -> portachiavi: anello
 
 I colori sono in JPEG perche' coprono tutto il fotogramma e non servono
 trasparenze: 38 e 41 KB invece di 421 e 441.
@@ -19,6 +19,10 @@ trasparenze: 38 e 41 KB invece di 421 e 441.
 REGOLA per i livelli sovrapposti: stessa inquadratura e stessa dimensione della
 foto di base. Se un'immagine e' ripresa in un'altra posizione, va dichiarata
 "separato": true in data.js e viene mostrata a fianco invece che sopra.
+
+DA VERIFICARE: nel listino la voce si chiama "Anello", ma la foto mostra un
+portachiavi in gomma personalizzato con anello e catenella. Se l'anello del
+listino e' solo l'anellino metallico, serve la foto giusta.
 
 FACOLTATIVO: una foto del retro permetterebbe di mostrare davvero la differenza
 fra incisione a 1 e a 2 lati, che oggi e' soltanto scritta sotto l'immagine.

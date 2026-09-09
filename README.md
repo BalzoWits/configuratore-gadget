@@ -13,52 +13,61 @@ img/         le immagini dell'anteprima
 
 ## Come funziona il calcolo
 
-1. **costo unità** del modello **+ lavorazioni scelte** = prezzo di listino;
-2. **meno lo sconto** della fascia di quantità raggiunta = prezzo unitario;
-3. **per il numero di pezzi** = totale.
+1. La quantità totale determina la **fascia** raggiunta.
+2. **Costo unità** del modello in quella fascia **+ lavorazioni** scelte, prese
+   dalla stessa fascia, = prezzo unitario.
+3. **Per il numero di pezzi** = totale.
 
-Lo sconto si applica a tutto, lavorazioni comprese: un solo prezzo per modello
-e una sola percentuale per fascia, invece di un prezzo diverso per ogni fascia.
+Il prezzo di ogni voce scende al crescere della quantità: lo sconto è dentro il
+listino, non applicato dopo.
 
-| Quantità | Sconto |
-|---|---|
-| 30 - 49 | listino |
-| 50 - 99 | −5% |
-| 100 - 249 | −10% |
-| 250 - 499 | −15% |
-| 500+ | −20% |
+### Il listino
 
-Esempio con il 2 GB e tutte le lavorazioni (incisione 2 lati, catenella,
-caricamento dati, portachiavi): listino 2,00 + 1,20 + 0,20 + 0,35 + 1,20 = **4,95 €/pz**.
-
-| Q.tà | Sconto | €/pz | Totale |
+| Modello | 1 - 30 | 31 - 50 | 51+ |
 |---|---|---|---|
-| 30 | — | 4,95 | 148,50 |
-| 50 | −5% | 4,70 | 235,00 |
-| 100 | −10% | 4,46 | 446,00 |
-| 250 | −15% | 4,21 | 1.052,50 |
-| 500 | −20% | 3,96 | 1.980,00 |
+| 2 GB | 3,20 | 3,00 | 2,90 |
+| 4 GB | 3,60 | 3,40 | 3,30 |
+| 8 GB | 3,80 | 3,50 | 3,40 |
 
-I primi tre totali sono a 1-2% da quelli del listino di partenza del fornitore
-(148,50 / 237,50 / 455,00), che otteneva lo stesso effetto con tre prezzi base
-diversi per il solo prodotto. Le fasce 250 e 500 sono una proposta, da
-confermare con il fornitore.
+| Lavorazione | 1 - 30 | 31 - 50 | 51+ |
+|---|---|---|---|
+| Incisione laser 1 lato | +1,00 | +0,90 | +0,80 |
+| Incisione laser 2 lati | +1,40 | +1,30 | +1,20 |
+| Portachiavi: catenella | +0,40 | +0,35 | +0,30 |
+| Portachiavi: anello | +0,40 | +0,35 | +0,30 |
+| Caricamento dati | +0,50 | +0,35 | +0,20 |
 
-Ogni voce è arrotondata a 2 decimali prima della somma, e lo sconto è mostrato
-come riga a sé: le cifre a schermo tornano sempre col prezzo unitario, e
-unitario × pezzi col totale.
+Catenella e anello stanno nella stessa colonna del listino del fornitore e
+costano uguale: sono **alternative**, si aggancia una cosa sola al foro. Il
+colore non ha sovrapprezzo.
 
-Il riepilogo segnala anche quando **aumentare la quantità costa meno**
-("aggiungi 12 pz e paghi 18,40 € in meno"), confrontando i totali ai punti di
-rottura delle fasce.
+Riga di controllo — 2 GB con incisione 2 lati, catenella e caricamento dati:
 
-## Prezzi da confermare
+| Q.tà | Costo unità | Lavorazioni | €/pz | Totale |
+|---|---|---|---|---|
+| 30 | 3,20 | 1,40 + 0,40 + 0,50 | 5,50 | 165,00 |
+| 50 | 3,00 | 1,30 + 0,35 + 0,35 | 5,00 | 250,00 |
+| 100 | 2,90 | 1,20 + 0,30 + 0,20 | 4,60 | 460,00 |
 
-Solo il **2 GB** ha un costo unità confermato (2,00 €). Per 4 GB (2,20) e 8 GB
-(2,50) i valori sono **provvisori**, scelti per rendere il configuratore
-utilizzabile: sono marcati con `"provvisorio": true` in `data.js`, e la pagina
-li segnala sia nel riepilogo sia con un asterisco nella tabella commerciale.
-Togli il flag quando hai i numeri veri.
+Ogni voce è arrotondata a 2 decimali prima della somma: le cifre a schermo
+tornano sempre col prezzo unitario, e unitario × pezzi col totale.
+
+Il riepilogo segnala anche quando **aumentare la quantità costa meno**,
+confrontando i totali ai punti di rottura delle fasce.
+
+### Oltre i 100 pezzi
+
+Il listino del fornitore si ferma a 100 pezzi. L'ultima fascia è aperta
+(`"max": null`) per poter preventivare ordini più grandi, ma applica i prezzi
+della fascia 51-100: **oltre i 100 pezzi vanno confermati**. La nota sotto la
+tabella commerciale lo dice anche a schermo.
+
+### Sconti sul totale
+
+Ogni fascia ha un campo `"sconto"`, oggi a zero perché gli sconti sono già nei
+prezzi di listino. Se servisse una riduzione ulteriore (una promozione, un
+cliente fisso), basta valorizzarlo: si applica al totale, lavorazioni comprese,
+e compare come riga a sé nel riepilogo.
 
 ## Modificare i prezzi
 
@@ -106,21 +115,23 @@ repository.
   "qtaMinima": 30,
 
   // In ordine crescente. "max": null significa "e oltre".
-  // "sconto" e' la percentuale sul totale; "riferimento" la quantita' usata
-  // come esempio nella tabella commerciale.
+  // "riferimento": la quantita' usata come esempio nella tabella commerciale
+  //                e nelle pastiglie di scelta rapida.
+  // "sconto":      percentuale sul totale, di norma 0 (i prezzi di fascia
+  //                contengono gia' lo sconto quantita').
   // Aggiungere uno scaglione = aggiungere una riga qui.
   "fasce": [
-    { "min": 30,  "max": 49,   "etichetta": "30 - 49 pz", "sconto": 0,  "riferimento": 30 },
-    { "min": 50,  "max": null, "etichetta": "50+ pz",     "sconto": 5,  "riferimento": 50 }
+    { "min": 1,  "max": 30,   "etichetta": "1 - 30 pz",  "sconto": 0, "riferimento": 30 },
+    { "min": 31, "max": null, "etichetta": "31+ pz",     "sconto": 0, "riferimento": 50 }
   ],
 
   // Le alternative fra cui l'articolo si sceglie: capacita', taglia, colore...
   "varianti": {
     "etichetta": "Modello",
     "voci": [
-      { "id": "s", "nome": "Small", "prezzo": 2.00 },
-      { "id": "m", "nome": "Medium", "prezzo": 2.50, "provvisorio": true },
-      { "id": "l", "nome": "Large", "prezzo": null }   // non selezionabile
+      { "id": "s", "nome": "Small", "prezzi": [2.00, 1.80] },
+      { "id": "m", "nome": "Medium", "prezzi": [2.50, 2.30], "provvisorio": true },
+      { "id": "l", "nome": "Large", "prezzi": [null, null] }   // non selezionabile
     ]
   },
 
