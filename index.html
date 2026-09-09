@@ -901,7 +901,7 @@ function renderRiepilogo(c){
   if(c.incompleto){
     avviso("wr","Da quotare",[
       txt("Il costo unità di "),forte(c.variante.nome),
-      txt(" non è ancora nel listino. Inseriscilo in «Modifica listino», in fondo alla pagina: le lavorazioni sono già conteggiate, "),
+      txt(" non è ancora nel listino: va inserito in data.js. Le lavorazioni sono comunque già conteggiate, "),
       forte(nf2.format(c.lavorazioni)+" €/pz"),txt(".")
     ]);
   }
