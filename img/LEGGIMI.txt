@@ -1,0 +1,17 @@
+IMMAGINI DELL'ANTEPRIMA
+
+Livelli sovrapposti alla foto di base (stessa inquadratura, 1080x1080):
+  chiavetta.png    foto di base
+  incisione.png    "your logo here" sul corpo    -> opzione incisione laser
+  catenella.png    catenella nel foro            -> opzione catenella
+  dati.png         scritta "DATI CARICATI"       -> opzione caricamento dati
+
+Accessorio fotografato a parte (non si sovrappone, sta a fianco):
+  portachiavi.png  portachiavi in gomma con anello -> opzione portachiavi
+
+REGOLA per i livelli sovrapposti: stessa inquadratura e stessa dimensione della
+foto di base. Se un'immagine e' ripresa in un'altra posizione, va dichiarata
+"separato": true in data.js e viene mostrata a fianco invece che sopra.
+
+FACOLTATIVO: una foto del retro permetterebbe di mostrare davvero la differenza
+fra incisione a 1 e a 2 lati, che oggi e' soltanto scritta sotto l'immagine.

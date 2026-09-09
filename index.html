@@ -1,0 +1,1469 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuratore Gadget Promozionali</title>
+<meta name="description" content="Calcolatore di preventivi per gadget promozionali con prezzi a scaglioni e lavorazioni personalizzate.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ---------- token: tema chiaro (definizione completa) ---------- */
+:root{
+  --bg:#eef3f4; --surface:#ffffff; --surface-2:#f6f9fa; --surface-3:#e7eef0;
+  --ink:#10222a; --ink-2:#4a6570; --ink-3:#7794a0;
+  --hair:#d3e0e4; --hair-strong:#b9cdd3;
+  --petrol:#164b5c; --on-petrol:#eaf6f8;
+  --accent:#0e7c93; --accent-ink:#ffffff; --accent-soft:#dceff3; --accent-hair:#a8d6e0;
+  --good:#1f7a55; --good-soft:#dff0e7;
+  --warn:#8f5c12; --warn-soft:#fbf0dc; --warn-hair:#e7cb98;
+  --crit:#a2382e;
+  --shadow:0 1px 2px rgba(16,34,42,.06), 0 8px 24px -12px rgba(16,34,42,.18);
+  --r:10px; --r-s:6px;
+  color-scheme:light;
+}
+/* ---------- token: tema scuro via preferenza di sistema ---------- */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1417; --surface:#14252c; --surface-2:#101f25; --surface-3:#1b3038;
+    --ink:#e4edef; --ink-2:#9cb5bd; --ink-3:#74929c;
+    --hair:#23404a; --hair-strong:#33565f;
+    --petrol:#0f3c4a; --on-petrol:#d8eef3;
+    --accent:#46b8d0; --accent-ink:#04222a; --accent-soft:#123640; --accent-hair:#1f5867;
+    --good:#4fbe8b; --good-soft:#10312a;
+    --warn:#e0a24a; --warn-soft:#2e2411; --warn-hair:#5c4620;
+    --crit:#e4796b;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+    color-scheme:dark;
+  }
+}
+/* ---------- token: tema scuro scelto esplicitamente ---------- */
+:root[data-theme="dark"]{
+  --bg:#0b1417; --surface:#14252c; --surface-2:#101f25; --surface-3:#1b3038;
+  --ink:#e4edef; --ink-2:#9cb5bd; --ink-3:#74929c;
+  --hair:#23404a; --hair-strong:#33565f;
+  --petrol:#0f3c4a; --on-petrol:#d8eef3;
+  --accent:#46b8d0; --accent-ink:#04222a; --accent-soft:#123640; --accent-hair:#1f5867;
+  --good:#4fbe8b; --good-soft:#10312a;
+  --warn:#e0a24a; --warn-soft:#2e2411; --warn-hair:#5c4620;
+  --crit:#e4796b;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+/* serve perche' display:flex vincerebbe sullo stile predefinito di [hidden] */
+[hidden]{display:none !important}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
+  font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0; text-wrap:balance; font-weight:600; letter-spacing:-.01em}
+h1{font-size:1.5rem; font-variation-settings:"wdth" 112}
+h2{font-size:1.0625rem; font-variation-settings:"wdth" 108}
+h3{font-size:.9375rem}
+p{margin:0}
+button,input,select,textarea{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+.num{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums}
+.eyebrow{
+  font-size:.6875rem; font-weight:600; text-transform:uppercase; letter-spacing:.1em;
+  color:var(--ink-3); font-variation-settings:"wdth" 92;
+}
+
+/* ---------- barra superiore ---------- */
+.topbar{
+  border-bottom:1px solid var(--hair); background:var(--surface);
+  position:sticky; top:0; z-index:20;
+}
+.topbar-in{
+  max-width:1240px; margin:0 auto; padding:14px 22px;
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+}
+.wordmark{display:flex; align-items:baseline; gap:10px; margin-right:auto}
+.wordmark .rule{
+  width:26px; height:0; border-top:3px solid var(--accent);
+  align-self:center; flex:none;
+}
+.topbar .meta{color:var(--ink-2); font-size:.8125rem}
+.ghost{
+  background:none; border:1px solid var(--hair-strong); color:var(--ink-2);
+  padding:6px 11px; border-radius:var(--r-s); cursor:pointer; font-size:.8125rem;
+}
+.ghost:hover{border-color:var(--accent); color:var(--accent)}
+
+/* ---------- impianto di pagina ---------- */
+.page{max-width:1320px; margin:0 auto; padding:22px 22px 64px; display:flex; flex-direction:column; gap:22px}
+
+/* tre colonne: anteprima (binario fisso a sinistra), configuratore, riepilogo */
+.workbench{
+  display:grid; gap:20px; align-items:start;
+  grid-template-columns:265px minmax(0,1fr) minmax(300px,335px);
+}
+/* il binario e' alto quanto la finestra e centra il suo contenuto: cosi'
+   l'anteprima resta a mezza altezza mentre si scorre la pagina */
+.col-ant{
+  position:sticky; top:70px; height:calc(100vh - 92px);
+  display:flex; align-items:center; justify-content:center; overflow-y:auto;
+}
+.col-ant > .panel{width:100%}
+
+@media (max-width:1180px){
+  .workbench{grid-template-columns:minmax(0,1.5fr) minmax(290px,.95fr)}
+  .col-ant{grid-column:1 / -1; position:static; height:auto; display:block; overflow:visible}
+}
+@media (max-width:880px){ .workbench{grid-template-columns:minmax(0,1fr)} }
+
+.panel{background:var(--surface); border:1px solid var(--hair); border-radius:var(--r)}
+.panel-head{padding:15px 18px; border-bottom:1px solid var(--hair); display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.panel-head .eyebrow{margin-right:auto}
+.panel-body{padding:18px; display:flex; flex-direction:column; gap:20px}
+
+/* ---------- intestazione prodotto e anteprima ---------- */
+.prod-head{display:flex; flex-direction:column; gap:6px}
+.prod-head .sub{color:var(--ink-2); font-size:.875rem}
+
+/* la foto sta su una cartolina bianca: e' una foto prodotto, e i livelli
+   sovrapposti sono stati preparati su fondo bianco */
+.ant-body{padding:14px; display:flex; flex-direction:column; gap:11px}
+.scatto{position:relative; width:100%; background:#fff; border-radius:var(--r-s); overflow:hidden}
+.scatto .lv{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; display:block}
+/* accessori fotografati a parte: non si sovrappongono, stanno a fianco */
+.accessori{display:flex; flex-wrap:wrap; gap:8px}
+.accessori figure{
+  margin:0; flex:1 1 0; min-width:88px; display:flex; flex-direction:column; gap:4px;
+  border:1px solid var(--hair); border-radius:var(--r-s); overflow:hidden;
+}
+.accessori img{width:100%; height:auto; display:block; background:#fff}
+.accessori figcaption{
+  padding:4px 6px; font-size:.6875rem; color:var(--ink-2); text-align:center;
+  background:var(--surface-2);
+}
+.lati{font-size:.75rem; color:var(--ink-2); text-align:center; margin:0}
+.lati b{color:var(--ink); font-weight:600}
+/* i livelli legati alle scelte compaiono in dissolvenza */
+.dis-opt{opacity:0; transition:opacity .22s ease}
+.dis-opt.on{opacity:1}
+
+.legenda{display:flex; flex-wrap:wrap; gap:6px}
+.legenda span{
+  font-size:.75rem; padding:3px 9px; border-radius:999px;
+  background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent-hair);
+}
+.legenda span.modello{background:var(--petrol); color:var(--on-petrol); border-color:var(--petrol); font-weight:600}
+.legenda span.vuota{background:var(--surface-3); color:var(--ink-3); border-color:var(--hair)}
+.tratti{display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; padding:0; list-style:none}
+.tratti li{
+  font-size:.75rem; color:var(--ink-2); background:var(--surface-3);
+  padding:3px 9px; border-radius:999px;
+}
+.prod-tabs{display:flex; gap:6px; flex-wrap:wrap}
+.prod-tabs button{
+  background:var(--surface-2); border:1px solid var(--hair); color:var(--ink-2);
+  padding:7px 13px; border-radius:999px; cursor:pointer; font-size:.8125rem;
+}
+.prod-tabs button[aria-selected="true"]{background:var(--petrol); border-color:var(--petrol); color:var(--on-petrol)}
+
+/* ---------- gruppi di controllo ---------- */
+.group{display:flex; flex-direction:column; gap:9px}
+.group > .lbl{display:flex; align-items:baseline; gap:8px}
+.group > .lbl .hint{margin-left:auto; font-size:.75rem; color:var(--ink-3)}
+
+.seg{display:flex; gap:0; border:1px solid var(--hair-strong); border-radius:var(--r-s); overflow:hidden; flex-wrap:wrap}
+.seg label{
+  flex:1 1 0; min-width:96px; padding:10px 12px; cursor:pointer;
+  display:flex; flex-direction:column; gap:2px;
+  border-right:1px solid var(--hair); background:var(--surface-2);
+  transition:background .12s ease;
+}
+.seg label:last-child{border-right:0}
+.seg label:hover{background:var(--surface-3)}
+.seg input{position:absolute; opacity:0; width:0; height:0}
+.seg .nm{font-weight:600; font-size:.875rem}
+.seg .pz{font-size:.75rem; color:var(--ink-3)}
+.seg label:has(input:checked){background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--accent-hair)}
+.seg label:has(input:checked) .nm{color:var(--accent)}
+.seg label.off{cursor:not-allowed; background:repeating-linear-gradient(135deg,var(--surface-2) 0 6px,var(--surface-3) 6px 12px)}
+.seg label.off .nm{color:var(--ink-3)}
+.seg label.off .pz{font-style:italic}
+.seg label:has(input:focus-visible){outline:2px solid var(--accent); outline-offset:-2px}
+
+/* ---------- quantita ---------- */
+.qta-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.stepper{display:flex; align-items:stretch; border:1px solid var(--hair-strong); border-radius:var(--r-s); overflow:hidden}
+.stepper button{
+  width:38px; background:var(--surface-2); border:0; cursor:pointer; color:var(--ink-2);
+  font-size:1.125rem; line-height:1;
+}
+.stepper button:hover{background:var(--surface-3); color:var(--accent)}
+.stepper input{
+  width:88px; border:0; border-left:1px solid var(--hair); border-right:1px solid var(--hair);
+  background:var(--surface); text-align:center; padding:9px 4px; font-size:1rem; font-weight:600;
+  font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums;
+}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+.stepper input[type=number]{-moz-appearance:textfield}
+.chips{display:flex; gap:5px; flex-wrap:wrap}
+.chips button{
+  background:none; border:1px dashed var(--hair-strong); color:var(--ink-2);
+  padding:6px 10px; border-radius:var(--r-s); cursor:pointer; font-size:.8125rem;
+  font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+.chips button:hover{border-style:solid; border-color:var(--accent); color:var(--accent)}
+input[type=range]{width:100%; accent-color:var(--accent)}
+
+/* ---------- nastro fasce ---------- */
+.nastro{display:flex; gap:3px; margin-top:2px}
+.nastro .f{
+  flex:1; padding:7px 9px; border-radius:var(--r-s); background:var(--surface-2);
+  border:1px solid var(--hair); text-align:center; font-size:.75rem; color:var(--ink-3);
+}
+.nastro .f.on{background:var(--petrol); border-color:var(--petrol); color:var(--on-petrol); font-weight:600}
+.nastro .f .p{display:block; margin-top:2px; font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-size:.8125rem}
+
+/* ---------- opzioni a interruttore ---------- */
+.opt-list{display:flex; flex-direction:column; border:1px solid var(--hair); border-radius:var(--r-s); overflow:hidden}
+.opt{
+  display:flex; align-items:center; gap:12px; padding:11px 13px; cursor:pointer;
+  border-bottom:1px solid var(--hair); background:var(--surface);
+}
+.opt:last-child{border-bottom:0}
+.opt:hover{background:var(--surface-2)}
+.opt input{width:17px; height:17px; accent-color:var(--accent); flex:none; margin:0}
+.opt .nm{flex:1; font-size:.875rem}
+.opt .pz{
+  font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums;
+  font-size:.8125rem; color:var(--ink-2);
+}
+.opt:has(input:checked){background:var(--accent-soft)}
+.opt:has(input:checked) .pz{color:var(--accent); font-weight:600}
+
+/* ---------- riepilogo ---------- */
+.riepilogo{position:sticky; top:70px; display:flex; flex-direction:column; gap:0}
+.somma{padding:18px; border-bottom:1px solid var(--hair); background:var(--surface-2); border-radius:var(--r) var(--r) 0 0}
+.unitario{display:flex; align-items:flex-end; gap:8px; margin-top:4px}
+.unitario .v{
+  font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums;
+  font-size:2.375rem; font-weight:600; line-height:1; letter-spacing:-.02em;
+}
+.unitario .u{color:var(--ink-3); font-size:.8125rem; padding-bottom:3px}
+.dettaglio{padding:14px 18px; display:flex; flex-direction:column; gap:0}
+.rr{display:flex; gap:10px; padding:5px 0; font-size:.875rem; align-items:baseline}
+.rr .k{color:var(--ink-2)}
+.rr .k small{display:block; color:var(--ink-3); font-size:.75rem}
+.rr .v{margin-left:auto; font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums}
+.rr.sep{border-top:1px solid var(--hair); margin-top:6px; padding-top:10px}
+.rr.tot{font-weight:600; font-size:1rem}
+.rr.tot .v{font-size:1.1875rem}
+.rr.manca{color:var(--warn)}
+.rr.sconto{color:var(--good)}
+
+.avvisi{display:flex; flex-direction:column; gap:8px; padding:0 18px 4px}
+.avvisi:not(:empty){border-top:1px solid var(--hair); padding-top:13px}
+.avviso{
+  display:flex; gap:10px; padding:10px 12px; border-radius:var(--r-s); font-size:.8125rem;
+  line-height:1.45; border:1px solid; align-items:flex-start;
+}
+.avviso .tag{
+  font-size:.625rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+  padding:2px 6px; border-radius:3px; flex:none; margin-top:1px;
+}
+.avviso.op{background:var(--good-soft); border-color:var(--good); color:var(--ink)}
+.avviso.op .tag{background:var(--good); color:var(--surface)}
+.avviso.wr{background:var(--warn-soft); border-color:var(--warn-hair); color:var(--ink)}
+.avviso.wr .tag{background:var(--warn); color:var(--surface)}
+.avviso b{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-weight:600}
+.avviso button{
+  background:none; border:0; padding:0; margin-left:4px; cursor:pointer;
+  color:var(--accent); text-decoration:underline; font-size:.8125rem;
+}
+.azione{padding:14px 18px 18px}
+.primario{
+  width:100%; background:var(--accent); color:var(--accent-ink); border:0;
+  padding:12px 16px; border-radius:var(--r-s); font-weight:600; cursor:pointer; font-size:.9375rem;
+}
+.primario:hover{filter:brightness(1.08)}
+.primario:active{transform:translateY(1px)}
+.primario:disabled{
+  background:var(--surface-3); color:var(--ink-3); cursor:not-allowed;
+  filter:none; transform:none;
+}
+
+/* ---------- tabelle ---------- */
+.tw{overflow-x:auto}
+table{width:100%; border-collapse:collapse; font-size:.875rem}
+caption{text-align:left; padding:0 0 8px; color:var(--ink-3); font-size:.75rem}
+th,td{padding:9px 12px; text-align:right; border-bottom:1px solid var(--hair); white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{
+  background:var(--petrol); color:var(--on-petrol); font-size:.6875rem; font-weight:600;
+  text-transform:uppercase; letter-spacing:.07em; border-bottom:0;
+}
+thead th:first-child{border-radius:var(--r-s) 0 0 0}
+thead th:last-child{border-radius:0 var(--r-s) 0 0}
+tbody tr:last-child td{border-bottom:0}
+td.p{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums}
+
+/* ---------- preventivo ---------- */
+.vuoto{padding:26px 18px; text-align:center; color:var(--ink-3); font-size:.875rem}
+.righe td{vertical-align:top; white-space:normal}
+.righe .desc{font-weight:600}
+.righe .lav{font-size:.75rem; color:var(--ink-2); margin-top:2px}
+.righe .del{
+  background:none; border:0; cursor:pointer; color:var(--ink-3); padding:2px 6px;
+  border-radius:3px; font-size:1rem; line-height:1;
+}
+.righe .del:hover{color:var(--crit); background:var(--warn-soft)}
+.righe .rip{background:none; border:0; cursor:pointer; color:var(--accent); font-size:.75rem; text-decoration:underline; padding:0}
+tfoot td{border-bottom:0; padding-top:10px}
+tfoot tr.imp td{border-top:1px solid var(--hair-strong)}
+tfoot tr.gtot td{font-weight:700; font-size:1.0625rem}
+.barra-az{display:flex; gap:8px; padding:14px 18px; border-top:1px solid var(--hair); flex-wrap:wrap}
+
+/* ---------- tabella commerciale ---------- */
+.com-wrap{padding:18px; display:flex; flex-direction:column; gap:14px}
+.com-griglia{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; align-items:start}
+.com-box{border:1px solid var(--hair); border-radius:var(--r-s); overflow:hidden}
+.com-box h3{padding:9px 12px; background:var(--surface-2); border-bottom:1px solid var(--hair); font-size:.8125rem}
+table.commerciale{font-size:.8125rem}
+table.commerciale th{font-size:.625rem}
+table.commerciale td{white-space:nowrap}
+table.commerciale tbody tr:last-child td{border-bottom:0}
+.com-nota{font-size:.75rem; color:var(--ink-2); line-height:1.5; max-width:80ch}
+
+/* ---------- editor listino ---------- */
+details.editor{background:var(--surface); border:1px solid var(--hair); border-radius:var(--r)}
+details.editor > summary{
+  padding:15px 18px; cursor:pointer; display:flex; align-items:center; gap:10px;
+  font-weight:600; font-size:.9375rem; list-style:none;
+}
+details.editor > summary::-webkit-details-marker{display:none}
+details.editor > summary::after{content:"+"; margin-left:auto; color:var(--ink-3); font-size:1.25rem; line-height:1}
+details.editor[open] > summary::after{content:"−"}
+details.editor[open] > summary{border-bottom:1px solid var(--hair)}
+.ed-body{padding:18px; display:flex; flex-direction:column; gap:18px}
+.ed-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:18px}
+.ed-box{border:1px solid var(--hair); border-radius:var(--r-s); overflow:hidden}
+.ed-box h3{padding:10px 12px; background:var(--surface-2); border-bottom:1px solid var(--hair); font-size:.8125rem}
+.ed-tab{width:100%; border-collapse:collapse; font-size:.8125rem}
+.ed-tab th{
+  background:none; color:var(--ink-3); text-transform:uppercase; letter-spacing:.06em;
+  font-size:.625rem; padding:7px 8px; border-bottom:1px solid var(--hair);
+}
+.ed-tab td{padding:5px 8px; border-bottom:1px solid var(--hair)}
+.ed-tab input{
+  width:74px; padding:5px 7px; text-align:right; border:1px solid var(--hair-strong);
+  border-radius:4px; background:var(--surface);
+  font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums;
+}
+.ed-tab input:hover{border-color:var(--accent-hair)}
+textarea.io{
+  width:100%; min-height:150px; padding:11px; border:1px solid var(--hair-strong);
+  border-radius:var(--r-s); background:var(--surface-2); resize:vertical;
+  font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-size:.75rem; line-height:1.5;
+}
+.ed-note{font-size:.8125rem; color:var(--ink-2); max-width:66ch}
+.esito{font-size:.8125rem; color:var(--good); min-height:1.2em}
+.esito.ko{color:var(--crit)}
+
+footer.piede{max-width:1240px; margin:0 auto; padding:0 22px 40px; color:var(--ink-3); font-size:.75rem; max-width:80ch}
+
+@media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
+
+/* ---------- stampa ---------- */
+@media print{
+  @page{ margin:12mm }
+  body{background:#fff; color:#000; font-size:10pt}
+  /* un contenitore con overflow taglia cio' che sporge, sulla carta */
+  .tw,.com-wrap,.com-box{overflow:visible !important}
+  table{page-break-inside:auto}
+  tr{page-break-inside:avoid}
+  .topbar,.workbench,details.editor,.barra-az,footer.piede{display:none !important}
+  .panel{border:0}
+  .page{padding:0; max-width:none}
+  thead th{background:#e8eef0 !important; color:#000 !important}
+  .stampa-testata{display:block !important; margin-bottom:14pt}
+  /* si stampa solo la sezione da cui e' partito il comando */
+  body.p-prev #panelCommerciale{display:none !important}
+  body.p-tab #panelPreventivo{display:none !important}
+  table.commerciale td.mod,table.commerciale td.tot,
+  table.commerciale tbody tr:nth-child(even) td{background:#f4f7f8 !important; color:#000 !important}
+  .com-wrap{padding:0}
+}
+.stampa-testata{display:none}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="wordmark">
+      <span class="rule"></span>
+      <h1>Configuratore gadget promozionali</h1>
+    </div>
+    <span class="meta num" id="dataOggi"></span>
+    <button class="ghost" id="btnTema" type="button">Tema: auto</button>
+  </div>
+</header>
+
+<div class="page">
+
+  <div class="workbench">
+
+    <!-- ============ ANTEPRIMA ============ -->
+    <aside class="col-ant" id="antBox">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">Anteprima</span></div>
+        <div class="ant-body">
+          <div class="scatto" id="scatto"></div>
+          <div class="accessori" id="accessori"></div>
+          <p class="lati" id="latiNota"></p>
+          <div class="legenda" id="legLav"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============ CONFIGURATORE ============ -->
+    <section class="panel">
+      <div class="panel-head">
+        <span class="eyebrow">Configurazione</span>
+        <div class="prod-tabs" id="prodTabs" role="tablist"></div>
+      </div>
+      <div class="panel-body">
+
+        <div class="prod-head">
+          <h2 id="prodNome"></h2>
+          <p class="sub" id="prodSub"></p>
+          <ul class="tratti" id="prodTratti"></ul>
+        </div>
+
+        <div class="group" id="grVarianti">
+          <div class="lbl">
+            <span class="eyebrow" id="lblVariante">Modello</span>
+            <span class="hint">prezzo base unitario nella fascia attiva</span>
+          </div>
+          <div class="seg" id="segVarianti"></div>
+        </div>
+
+        <div class="group">
+          <div class="lbl">
+            <span class="eyebrow">Quantità</span>
+            <span class="hint" id="hintMin"></span>
+          </div>
+          <div class="qta-row">
+            <div class="stepper">
+              <button type="button" id="qtaMeno" aria-label="Riduci quantità">−</button>
+              <input type="number" id="qta" min="1" step="1" inputmode="numeric" aria-label="Quantità in pezzi">
+              <button type="button" id="qtaPiu" aria-label="Aumenta quantità">+</button>
+            </div>
+            <div class="chips" id="qtaChips"></div>
+          </div>
+          <input type="range" id="qtaRange" min="10" max="600" step="1" aria-label="Quantità (cursore)">
+          <div class="nastro" id="nastro"></div>
+        </div>
+
+        <div class="group" id="grOpzioni"></div>
+
+      </div>
+    </section>
+
+    <!-- ============ RIEPILOGO ============ -->
+    <aside class="panel riepilogo">
+      <div class="somma">
+        <span class="eyebrow">Prezzo unitario</span>
+        <div class="unitario">
+          <span class="v" id="rUnit">—</span>
+          <span class="u">€ / pz</span>
+        </div>
+      </div>
+
+      <div class="dettaglio" id="rDett"></div>
+
+      <div class="avvisi" id="rAvvisi"></div>
+
+      <div class="azione">
+        <button class="primario" type="button" id="btnAdd">Aggiungi al preventivo</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============ PREVENTIVO ============ -->
+  <section class="panel" id="panelPreventivo">
+    <div class="panel-head">
+      <span class="eyebrow">Preventivo</span>
+      <span class="meta" id="righeConta"></span>
+    </div>
+    <div class="stampa-testata">
+      <h2>Preventivo</h2>
+      <p class="num" id="stampaData"></p>
+    </div>
+    <div id="righeWrap"></div>
+    <div class="barra-az">
+      <button class="ghost" type="button" id="btnStampa">Stampa / PDF</button>
+      <button class="ghost" type="button" id="btnCopia">Copia come testo</button>
+      <button class="ghost" type="button" id="btnSvuota">Svuota</button>
+      <span class="esito" id="esitoCopia"></span>
+    </div>
+  </section>
+
+  <!-- ============ TABELLA COMMERCIALE ============ -->
+  <section class="panel" id="panelCommerciale">
+    <div class="panel-head">
+      <span class="eyebrow">Tabella commerciale</span>
+      <span class="meta">generata dal listino, pronta per la presentazione</span>
+    </div>
+    <div class="stampa-testata">
+      <h2 id="comTitolo"></h2>
+    </div>
+    <div class="com-wrap">
+      <div class="com-griglia" id="comGriglia"></div>
+      <p class="com-nota" id="comNota"></p>
+    </div>
+    <div class="barra-az">
+      <button class="ghost" type="button" id="btnStampaTab">Stampa / PDF</button>
+      <button class="ghost" type="button" id="btnCopiaTab">Copia per Excel</button>
+      <span class="esito" id="esitoTab"></span>
+    </div>
+  </section>
+
+  <!-- ============ EDITOR LISTINO ============ -->
+  <details class="editor">
+    <summary>Modifica listino</summary>
+    <div class="ed-body">
+      <p class="ed-note">
+        Le modifiche valgono per questa sessione: ricaricando la pagina torna quanto
+        scritto in <code>data.js</code>. Per renderle definitive copia il file qui sotto
+        dentro <code>data.js</code> del progetto.
+      </p>
+      <div class="ed-grid" id="edGrid"></div>
+      <div>
+        <span class="eyebrow">File data.js aggiornato</span>
+        <textarea class="io" id="edOut" readonly spellcheck="false"></textarea>
+        <div class="barra-az" style="padding-left:0; padding-right:0; border:0">
+          <button class="ghost" type="button" id="btnCopiaJson">Copia il file</button>
+          <span class="esito" id="esitoEd"></span>
+        </div>
+      </div>
+    </div>
+  </details>
+
+</div>
+
+<footer class="piede">
+  <p id="pieNote"></p>
+</footer>
+
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ============================ utilità ============================ */
+var K = { righe:"cgp.righe.v1", tema:"cgp.tema.v1" };
+function get(k){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+var nf2 = new Intl.NumberFormat("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2});
+var nf0 = new Intl.NumberFormat("it-IT");
+function eur(v){ return nf2.format(v)+" €"; }
+function r2(v){ return Math.round((v + Number.EPSILON)*100)/100; }
+function el(tag,attrs,txt){
+  var n=document.createElement(tag);
+  if(attrs) for(var a in attrs){ if(a==="class") n.className=attrs[a]; else n.setAttribute(a,attrs[a]); }
+  if(txt!=null) n.textContent=txt;
+  return n;
+}
+function svuota(n){ while(n.firstChild) n.removeChild(n.firstChild); }
+
+/* ============================ stato ============================ */
+/* copia di lavoro del listino: l'editor la modifica in memoria, e data.js
+   torna a comandare al primo ricaricamento della pagina */
+var cat = JSON.parse(JSON.stringify(window.CATALOGO));
+
+var S = { prodottoId:null, varianteId:null, qta:0, opzioni:{}, righe:get(K.righe)||[] };
+
+function prodotto(){
+  for(var i=0;i<cat.prodotti.length;i++) if(cat.prodotti[i].id===S.prodottoId) return cat.prodotti[i];
+  return cat.prodotti[0];
+}
+
+/* Prezzo di una voce nella fascia idx. Le lavorazioni hanno "prezzo" unico,
+   i prodotti hanno "prezzi" per fascia. null = non ancora definito. */
+function prezzoVoce(v,idx){
+  if(!v) return null;
+  if(v.prezzo!=null) return v.prezzo;
+  if(v.prezzi) { var x=v.prezzi[idx]; return x==null ? null : x; }
+  return null;
+}
+function varianteQuotata(p,v){
+  for(var i=0;i<p.fasce.length;i++) if(prezzoVoce(v,i)!=null) return true;
+  return false;
+}
+
+function caricaPreimpostato(p){
+  var d = p.preimpostato || {};
+  S.prodottoId = p.id;
+  S.varianteId = d.variante || p.varianti.voci[0].id;
+  /* se la variante preimpostata non ha prezzo, ripiega sulla prima quotata */
+  if(!varianteQuotata(p,variante(p,S.varianteId))){
+    p.varianti.voci.forEach(function(v){
+      if(S.varianteId===d.variante && varianteQuotata(p,v)) S.varianteId=v.id;
+    });
+  }
+  S.qta = d.qta || p.qtaMinima || p.fasce[0].min;
+  S.opzioni = {};
+  p.opzioni.forEach(function(g){
+    var pre = d.opzioni ? d.opzioni[g.id] : undefined;
+    if(g.tipo==="esclusiva") S.opzioni[g.id] = pre || g.voci[0].id;
+    else S.opzioni[g.id] = !!pre;
+  });
+}
+
+/* ======================= motore di calcolo ======================= */
+function fasciaIdx(p,qta){
+  for(var i=0;i<p.fasce.length;i++){
+    var f=p.fasce[i];
+    if(qta>=f.min && (f.max==null || qta<=f.max)) return i;
+  }
+  return qta < p.fasce[0].min ? 0 : p.fasce.length-1;
+}
+function variante(p,id){
+  for(var i=0;i<p.varianti.voci.length;i++) if(p.varianti.voci[i].id===id) return p.varianti.voci[i];
+  return p.varianti.voci[0];
+}
+/* Ogni componente e' arrotondato a 2 decimali PRIMA della somma: cosi' le voci
+   mostrate a schermo tornano sempre esattamente con il prezzo unitario. */
+function calcola(p,varianteId,qta,opz){
+  var idx = fasciaIdx(p,qta);
+  var v = variante(p,varianteId);
+  var grezzo = prezzoVoce(v,idx);
+  var basePz = grezzo==null ? null : r2(grezzo);
+  var voci=[];
+
+  p.opzioni.forEach(function(g){
+    var nome, lordo;
+    if(g.tipo==="esclusiva"){
+      var sel=null;
+      g.voci.forEach(function(x){ if(x.id===opz[g.id]) sel=x; });
+      if(!sel) return;
+      lordo = prezzoVoce(sel,idx);
+      if(!lordo) return;
+      nome = g.etichetta+": "+sel.nome;
+    } else {
+      if(!opz[g.id]) return;
+      lordo = prezzoVoce(g,idx);
+      if(!lordo) return;
+      nome = g.etichetta;
+    }
+    voci.push({ nome:nome, prezzo:r2(lordo) });
+  });
+
+  var lavorazioni = 0;
+  voci.forEach(function(x){ lavorazioni += x.prezzo; });
+  lavorazioni = r2(lavorazioni);
+
+  /* listino = costo unita' + lavorazioni; lo sconto della fascia si applica
+     al totale, quindi anche alle lavorazioni */
+  var perc = p.fasce[idx].sconto || 0;
+  var listino = basePz==null ? null : r2(basePz+lavorazioni);
+  var unit = listino==null ? null : r2(listino*(1-perc/100));
+  return {
+    idx:idx, fascia:p.fasce[idx], variante:v, base:basePz, voci:voci,
+    lavorazioni:lavorazioni, listino:listino,
+    perc:perc, sconto: unit==null ? 0 : r2(listino-unit),
+    unitario:unit, totale: unit==null ? null : r2(unit*qta),
+    incompleto: basePz==null,
+    provvisorio: !!v.provvisorio,
+    sottoMinimo: qta < (p.qtaMinima||0)
+  };
+}
+function totaleA(p,qta){
+  var t=calcola(p,S.varianteId,qta,S.opzioni).totale;
+  return t==null ? Infinity : t;
+}
+
+/* Confronta i totali sui punti di rottura degli scaglioni e trova la quantita'
+   piu' conveniente sopra e sotto quella corrente. */
+function convenienza(p,qta){
+  var minQ = p.qtaMinima||p.fasce[0].min, cand=[];
+  p.fasce.forEach(function(f){
+    cand.push(f.min);
+    if(f.max!=null) cand.push(f.max);
+  });
+  cand.push(minQ);
+  cand = cand.filter(function(q,i,a){ return q>=minQ && a.indexOf(q)===i && q!==qta; });
+
+  var ora = totaleA(p,qta), su=null, giu=null;
+  cand.forEach(function(q){
+    var t=totaleA(p,q);
+    if(t >= ora-0.005) return;
+    if(q>qta){ if(!su || t<su.tot) su={q:q,tot:t}; }
+    else     { if(!giu|| t<giu.tot) giu={q:q,tot:t}; }
+  });
+  return { ora:ora, su:su, giu:giu };
+}
+
+/* ==================== anteprima ====================
+   Livelli PNG sovrapposti alla foto di base, tutti con la stessa inquadratura.
+   Ogni livello dichiara in data.js da quale opzione dipende. */
+function accendi(ambito,sel,on){
+  var n=ambito.querySelector(sel);
+  if(n) n.classList.toggle("on",!!on);
+}
+
+/* i livelli si costruiscono una volta sola: poi cambia solo la classe */
+function initAnteprima(){
+  var p=prodotto(), a=p.anteprima, box=document.getElementById("antBox");
+  if(!a || !a.base || !a.livelli){ box.hidden=true; return; }
+  box.hidden=false;
+
+  var s=document.getElementById("scatto");
+  svuota(s);
+  s.style.aspectRatio=a.proporzioni ? a.proporzioni[0]+"/"+a.proporzioni[1] : "1/1";
+  var m='<img class="lv" src="'+a.base+'" alt="'+p.nome+'">', acc='';
+  Object.keys(a.livelli).forEach(function(k){
+    var L=a.livelli[k];
+    if(L.separato){
+      /* fotografato a parte: non combacia con la base, va mostrato a fianco */
+      acc+='<figure class="dis-opt g-'+k+'" hidden><img src="'+L.img+'" alt="">'+
+           '<figcaption>'+(L.didascalia||k)+'</figcaption></figure>';
+    } else {
+      m+='<img class="lv dis-opt g-'+k+'" src="'+L.img+'" alt="">';
+    }
+  });
+  s.insertAdjacentHTML("afterbegin",m);
+  var box2=document.getElementById("accessori");
+  svuota(box2);
+  box2.insertAdjacentHTML("afterbegin",acc);
+}
+
+function renderAnteprima(){
+  var p=prodotto(), a=p.anteprima;
+  if(!a || document.getElementById("antBox").hidden) return;
+  var s=document.getElementById("scatto");
+
+  var acc=document.getElementById("accessori");
+  Object.keys(a.livelli).forEach(function(k){
+    var L=a.livelli[k], scelto=S.opzioni[L.opzione];
+    var on = L.valori ? L.valori.indexOf(scelto)>=0 : !!scelto;
+    accendi(L.separato ? acc : s, ".g-"+k, on);
+    /* un accessorio spento non deve occupare spazio, non solo essere invisibile */
+    if(L.separato){
+      var n=acc.querySelector(".g-"+k);
+      if(n) n.hidden=!on;
+    }
+  });
+
+  /* la foto e' un lato solo: quanti lati sono incisi va detto a parole */
+  var nota=document.getElementById("latiNota");
+  svuota(nota);
+  var sceltaInc=S.opzioni.incisione;
+  if(sceltaInc==="2lati"){
+    nota.appendChild(document.createTextNode("Incisione su "));
+    nota.appendChild(el("b",null,"2 lati"));
+    nota.appendChild(document.createTextNode(" \u2014 la foto mostra un lato"));
+  } else if(sceltaInc==="1lato"){
+    nota.appendChild(document.createTextNode("Incisione su "));
+    nota.appendChild(el("b",null,"1 lato"));
+  } else {
+    nota.appendChild(document.createTextNode("Senza incisione"));
+  }
+
+  var leg=document.getElementById("legLav"); svuota(leg);
+  leg.appendChild(el("span",{class:"modello"},variante(p,S.varianteId).nome));
+  var lav=descrizioneOpzioni(p,S.opzioni);
+  if(lav.length) lav.forEach(function(t){ leg.appendChild(el("span",null,t)); });
+  else leg.appendChild(el("span",{class:"vuota"},"nessuna lavorazione"));
+}
+
+/* ======================= rendering: controlli ======================= */
+function renderTabs(){
+  var box=document.getElementById("prodTabs");
+  svuota(box);
+  if(cat.prodotti.length<2) return;
+  cat.prodotti.forEach(function(p){
+    var b=el("button",{type:"button",role:"tab"},p.nome);
+    b.setAttribute("aria-selected", p.id===S.prodottoId ? "true":"false");
+    b.onclick=function(){ caricaPreimpostato(p); renderTutto(); };
+    box.appendChild(b);
+  });
+}
+
+function renderProdotto(){
+  var p=prodotto();
+  document.getElementById("prodNome").textContent=p.nome;
+  document.getElementById("prodSub").textContent=p.sottotitolo||"";
+  var ul=document.getElementById("prodTratti"); svuota(ul);
+  (p.caratteristiche||[]).forEach(function(t){ ul.appendChild(el("li",null,t)); });
+  document.getElementById("lblVariante").textContent=p.varianti.etichetta||"Variante";
+  document.getElementById("hintMin").textContent="minimo "+nf0.format(p.qtaMinima)+" pz";
+}
+
+function renderVarianti(){
+  var p=prodotto(), idx=fasciaIdx(p,S.qta), box=document.getElementById("segVarianti");
+  svuota(box);
+  p.varianti.voci.forEach(function(v){
+    var prezzo=prezzoVoce(v,idx), quotata=varianteQuotata(p,v);
+    var nota = prezzo==null ? "da definire"
+             : eur(prezzo)+"/pz"+(v.provvisorio ? " · stima" : "");
+    var lab=el("label",{class:quotata?"":"off"});
+    var inp=el("input",{type:"radio",name:"variante",value:v.id});
+    inp.checked = v.id===S.varianteId;
+    if(!quotata) inp.disabled=true;
+    inp.onchange=function(){ S.varianteId=v.id; renderCalcolo(); };
+    lab.appendChild(inp);
+    lab.appendChild(el("span",{class:"nm"},v.nome));
+    lab.appendChild(el("span",{class:"pz num"}, nota));
+    box.appendChild(lab);
+  });
+}
+
+function renderQta(){
+  var p=prodotto();
+  document.getElementById("qta").value=S.qta;
+  document.getElementById("qta").min=1;
+  var rng=document.getElementById("qtaRange");
+  var ultima=p.fasce[p.fasce.length-1];
+  rng.min = Math.max(1, (p.fasce[0].min||1) - 20);
+  rng.max = Math.max(S.qta, (ultima.max || ultima.min*5));
+  rng.value=S.qta;
+
+  var chips=document.getElementById("qtaChips"); svuota(chips);
+  /* una pastiglia per fascia: il minimo che la fa scattare */
+  p.fasce.map(function(f){ return f.min; }).forEach(function(q){
+    var b=el("button",{type:"button"},nf0.format(q));
+    b.onclick=function(){ setQta(q); };
+    chips.appendChild(b);
+  });
+}
+
+function renderNastro(c){
+  var p=prodotto(), box=document.getElementById("nastro");
+  svuota(box);
+  p.fasce.forEach(function(f,i){
+    var d=el("div",{class:"f"+(i===c.idx?" on":"")});
+    d.appendChild(el("span",null,f.etichetta));
+    d.appendChild(el("span",{class:"p"}, f.sconto ? "−"+f.sconto+"%" : "listino"));
+    box.appendChild(d);
+  });
+}
+
+function renderOpzioni(){
+  var p=prodotto(), idx=fasciaIdx(p,S.qta), wrap=document.getElementById("grOpzioni");
+  svuota(wrap);
+
+  p.opzioni.forEach(function(g){
+    var gr=el("div",{class:"group"}), lbl=el("div",{class:"lbl"});
+    lbl.appendChild(el("span",{class:"eyebrow"},g.tipo==="esclusiva"?g.etichetta:""));
+    if(g.tipo==="esclusiva"){
+      gr.appendChild(lbl);
+      var seg=el("div",{class:"seg"});
+      g.voci.forEach(function(v){
+        var lab=el("label"), inp=el("input",{type:"radio",name:"opz-"+g.id,value:v.id});
+        inp.checked = S.opzioni[g.id]===v.id;
+        inp.onchange=function(){ S.opzioni[g.id]=v.id; renderCalcolo(); };
+        lab.appendChild(inp);
+        lab.appendChild(el("span",{class:"nm"},v.nome));
+        var pv=prezzoVoce(v,idx);
+        lab.appendChild(el("span",{class:"pz num"}, pv ? "+"+eur(pv) : "incluso"));
+        seg.appendChild(lab);
+      });
+      gr.appendChild(seg);
+      wrap.appendChild(gr);
+    }
+  });
+
+  var flags = p.opzioni.filter(function(g){ return g.tipo!=="esclusiva"; });
+  if(flags.length){
+    var gr2=el("div",{class:"group"}), l2=el("div",{class:"lbl"});
+    l2.appendChild(el("span",{class:"eyebrow"},"Lavorazioni aggiuntive"));
+    l2.appendChild(el("span",{class:"hint"},"prezzo unitario per pezzo"));
+    gr2.appendChild(l2);
+    var list=el("div",{class:"opt-list"});
+    flags.forEach(function(g){
+      var lab=el("label",{class:"opt"}), inp=el("input",{type:"checkbox",name:"opz-"+g.id,value:g.id});
+      inp.checked=!!S.opzioni[g.id];
+      inp.onchange=function(){ S.opzioni[g.id]=inp.checked; renderCalcolo(); };
+      lab.appendChild(inp);
+      lab.appendChild(el("span",{class:"nm"},g.etichetta));
+      lab.appendChild(el("span",{class:"pz"},"+"+eur(prezzoVoce(g,idx))));
+      list.appendChild(lab);
+    });
+    gr2.appendChild(list);
+    wrap.appendChild(gr2);
+  }
+}
+
+/* ======================= rendering: riepilogo ======================= */
+function renderRiepilogo(c){
+  var p=prodotto();
+  document.getElementById("rUnit").textContent = c.incompleto ? "—" : nf2.format(c.unitario);
+
+  var d=document.getElementById("rDett"); svuota(d);
+  function riga(k,v,cls,sub){
+    var r=el("div",{class:"rr"+(cls?" "+cls:"")});
+    var kk=el("span",{class:"k"},k);
+    if(sub) kk.appendChild(el("small",null,sub));
+    r.appendChild(kk);
+    r.appendChild(el("span",{class:"v"},v));
+    d.appendChild(r);
+  }
+  riga(p.varianti.etichetta+" "+c.variante.nome,
+       c.incompleto ? "da definire" : eur(c.base),
+       c.incompleto ? "manca" : null,
+       c.provvisorio ? "costo unità provvisorio" : "costo unità");
+  c.voci.forEach(function(x){ riga(x.nome, "+"+eur(x.prezzo)); });
+  if(c.incompleto){
+    riga("Lavorazioni × "+nf0.format(S.qta)+" pz", eur(r2(c.lavorazioni*S.qta)), "sep");
+    riga("Totale ordine", "—", "tot");
+  } else {
+    if(c.perc){
+      riga("Prezzo di listino", eur(c.listino), "sep");
+      riga("Sconto quantità "+c.perc+"%", "−"+eur(c.sconto), "sconto",
+           c.fascia.etichetta);
+      riga("Unitario × "+nf0.format(S.qta)+" pz", eur(c.unitario));
+    } else {
+      riga("Unitario × "+nf0.format(S.qta)+" pz", eur(c.unitario), "sep");
+    }
+    riga("Totale ordine", eur(c.totale), "tot");
+  }
+
+  var a=document.getElementById("rAvvisi"); svuota(a);
+  function avviso(cls,tag,frammenti){
+    var box=el("div",{class:"avviso "+cls});
+    box.appendChild(el("span",{class:"tag"},tag));
+    var t=el("span");
+    frammenti.forEach(function(f){ t.appendChild(f); });
+    box.appendChild(t);
+    a.appendChild(box);
+  }
+  function txt(s){ return document.createTextNode(s); }
+  function forte(s){ return el("b",null,s); }
+  function vai(q){
+    var b=el("button",{type:"button"},"imposta "+nf0.format(q)+" pz");
+    b.onclick=function(){ setQta(q); };
+    return b;
+  }
+
+  var btn=document.getElementById("btnAdd");
+  btn.disabled=c.incompleto;
+  btn.textContent = c.incompleto ? "Costo unità da definire" : "Aggiungi al preventivo";
+
+  if(c.incompleto){
+    avviso("wr","Da quotare",[
+      txt("Il costo unità di "),forte(c.variante.nome),
+      txt(" non è ancora nel listino. Inseriscilo in «Modifica listino», in fondo alla pagina: le lavorazioni sono già conteggiate, "),
+      forte(nf2.format(c.lavorazioni)+" €/pz"),txt(".")
+    ]);
+  }
+  if(c.provvisorio){
+    avviso("wr","Provvisorio",[
+      txt("Il costo unità del "),forte(c.variante.nome),
+      txt(" non è confermato dal fornitore: usalo come stima, non in offerta.")
+    ]);
+  }
+  if(c.sottoMinimo){
+    avviso("wr","Sotto minimo",[
+      txt("La quantità minima d'ordine è "),forte(nf0.format(p.qtaMinima)+" pz"),
+      txt(". Sotto soglia il prezzo applicato è quello della prima fascia, da confermare con il fornitore.")
+    ]);
+  }
+  var cv=convenienza(p,S.qta);
+  if(cv.su){
+    var cSu=calcola(p,S.varianteId,cv.su.q,S.opzioni);
+    avviso("op","Scaglione",[
+      txt("Aggiungi "),forte(nf0.format(cv.su.q-S.qta)+" pz"),txt(" (totale "+nf0.format(cv.su.q)+" pz): il prezzo scende a "),
+      forte(nf2.format(cSu.unitario)+" €/pz"),txt(" e paghi "),forte(nf2.format(r2(cv.ora-cv.su.tot))+" € in meno"),txt(". "),
+      vai(cv.su.q)
+    ]);
+  }
+  if(cv.giu){
+    avviso("wr","Fascia più cara",[
+      txt("Con "),forte(nf0.format(cv.giu.q)+" pz"),txt(" il totale sarebbe "),
+      forte(nf2.format(r2(cv.ora-cv.giu.tot))+" € più basso"),
+      txt(": in questo listino la fascia superiore ha un prezzo unitario più alto. "),
+      vai(cv.giu.q)
+    ]);
+  }
+}
+
+/* =================== tabella commerciale ===================
+   Tre tabelle brevi, generate dal listino: i prezzi unitari (uguali per ogni
+   quantita') e la scala degli sconti applicata alla configurazione scelta.
+   Le stesse strutture servono al rendering, alla stampa e alla copia. */
+
+function qtaRiferimento(f){ return f.riferimento || f.min; }
+
+function tabelleCommerciali(){
+  var p=prodotto(), t=[];
+
+  /* 1. costo unita' per modello */
+  t.push({
+    titolo:"Costo unità",
+    teste:[p.varianti.etichetta,"@/pz"],
+    righe:p.varianti.voci.map(function(v){
+      var pz=prezzoVoce(v,0);
+      return [ v.nome+(v.provvisorio?" *":""), pz==null?"—":nf2.format(pz) ];
+    })
+  });
+
+  /* 2. lavorazioni, prezzo unitario fisso */
+  var lav=[];
+  p.opzioni.forEach(function(g){
+    if(g.tipo==="esclusiva"){
+      g.voci.forEach(function(v){
+        var pz=prezzoVoce(v,0);
+        if(pz) lav.push([g.etichetta+" "+v.nome, "+"+nf2.format(pz)]);
+      });
+    } else {
+      var pz2=prezzoVoce(g,0);
+      if(pz2) lav.push([g.etichetta, "+"+nf2.format(pz2)]);
+    }
+  });
+  t.push({ titolo:"Lavorazioni", teste:["Servizio","@/pz"], righe:lav });
+
+  /* 3. sconti per quantita', sulla configurazione corrente */
+  t.push({
+    titolo:"Sconti per quantità",
+    teste:["Quantità","Sconto","@/pz","Totale"],
+    righe:p.fasce.map(function(f){
+      var q=qtaRiferimento(f), k=calcola(p,S.varianteId,q,S.opzioni);
+      return [
+        f.etichetta,
+        f.sconto ? "−"+f.sconto+"%" : "listino",
+        k.unitario==null ? "—" : nf2.format(k.unitario),
+        k.totale==null ? "—" : nf2.format(k.totale)+" ("+nf0.format(q)+" pz)"
+      ];
+    })
+  });
+
+  return t;
+}
+
+function renderCommerciale(){
+  var p=prodotto(), griglia=document.getElementById("comGriglia");
+  svuota(griglia);
+
+  tabelleCommerciali().forEach(function(T){
+    var box=el("div",{class:"com-box"});
+    box.appendChild(el("h3",null,T.titolo));
+    var tab=el("table",{class:"commerciale"}), thead=el("thead"), tr=el("tr");
+    T.teste.forEach(function(x){ tr.appendChild(el("th",null,x.replace("@","\u20ac"))); });
+    thead.appendChild(tr); tab.appendChild(thead);
+    var tb=el("tbody");
+    T.righe.forEach(function(r){
+      var t=el("tr");
+      r.forEach(function(cel,i){
+        t.appendChild(el("td",{class:i?"p":""},cel));
+      });
+      tb.appendChild(t);
+    });
+    tab.appendChild(tb);
+    box.appendChild(el("div",{class:"tw"})).appendChild(tab);
+    griglia.appendChild(box);
+  });
+
+  var lav=descrizioneOpzioni(p,S.opzioni);
+  var provv=p.varianti.voci.filter(function(v){ return v.provvisorio; })
+                          .map(function(v){ return v.nome; });
+  var testo="Prezzi unitari in euro. Lo sconto della fascia si applica al totale, "+
+            "lavorazioni comprese. La colonna dei totali usa il modello "+
+            variante(p,S.varianteId).nome+" con: "+
+            (lav.length ? lav.join(", ") : "nessuna lavorazione")+".";
+  if(provv.length) testo+=" (*) costo unit"+"\u00e0"+" provvisorio per "+provv.join(" e ")+
+                          ", da confermare con il fornitore.";
+  document.getElementById("comNota").textContent=testo;
+  document.getElementById("comTitolo").textContent=p.nome+" "+"\u2014"+" listino "+
+    new Date().toLocaleDateString("it-IT",{month:"long",year:"numeric"});
+}
+
+function testoCommerciale(){
+  var out=[];
+  tabelleCommerciali().forEach(function(T){
+    out.push(T.titolo);
+    out.push(T.teste.join("\t").replace("@","\u20ac"));
+    T.righe.forEach(function(r){ out.push(r.join("\t")); });
+    out.push("");
+  });
+  out.push(document.getElementById("comNota").textContent);
+  return out.join("\n");
+}
+
+/* ======================= righe di preventivo ======================= */
+function descrizioneOpzioni(p,opz){
+  var out=[];
+  p.opzioni.forEach(function(g){
+    if(g.tipo==="esclusiva"){
+      g.voci.forEach(function(v){
+        if(v.id!==opz[g.id]) return;
+        var costo=false;
+        for(var i=0;i<p.fasce.length;i++) if(prezzoVoce(v,i)) costo=true;
+        if(costo) out.push(g.etichetta+" "+v.nome);
+      });
+    } else if(opz[g.id]) out.push(g.etichetta);
+  });
+  return out;
+}
+
+function aggiungiRiga(){
+  var p=prodotto(), c=calcola(p,S.varianteId,S.qta,S.opzioni);
+  S.righe.push({
+    id: String(Date.now())+Math.random().toString(16).slice(2,6),
+    prodottoId:p.id, prodotto:p.nome,
+    variante:p.varianti.etichetta+" "+c.variante.nome, varianteId:S.varianteId,
+    qta:S.qta, opzioni:JSON.parse(JSON.stringify(S.opzioni)),
+    lavorazioni:descrizioneOpzioni(p,S.opzioni),
+    unitario:c.unitario, totale:c.totale, fascia:c.fascia.etichetta
+  });
+  set(K.righe,S.righe);
+  renderRighe();
+  document.getElementById("esitoCopia").textContent="";
+}
+
+function renderRighe(){
+  var wrap=document.getElementById("righeWrap"); svuota(wrap);
+  document.getElementById("righeConta").textContent =
+    S.righe.length ? S.righe.length+(S.righe.length===1?" riga":" righe") : "";
+
+  if(!S.righe.length){
+    wrap.appendChild(el("p",{class:"vuoto"},"Nessuna riga. Configura un articolo qui sopra e premi «Aggiungi al preventivo»."));
+    return;
+  }
+
+  var imponibile=0;
+  S.righe.forEach(function(r){ imponibile+=r.totale; });
+  imponibile=r2(imponibile);
+
+  var tw=el("div",{class:"tw"}), tab=el("table",{class:"righe"});
+  var thead=el("thead"), tr=el("tr");
+  ["Articolo","Q.tà","Fascia","€/pz","Totale",""].forEach(function(h){ tr.appendChild(el("th",null,h)); });
+  thead.appendChild(tr); tab.appendChild(thead);
+
+  var tb=el("tbody");
+  S.righe.forEach(function(r){
+    var t=el("tr");
+    var td=el("td");
+    td.appendChild(el("div",{class:"desc"},r.prodotto+" · "+r.variante));
+    td.appendChild(el("div",{class:"lav"}, r.lavorazioni.length ? r.lavorazioni.join(" · ") : "nessuna lavorazione"));
+    var rip=el("button",{class:"rip",type:"button"},"riprendi nel configuratore");
+    rip.onclick=function(){ riprendi(r); };
+    td.appendChild(rip);
+    t.appendChild(td);
+    t.appendChild(el("td",{class:"p"},nf0.format(r.qta)));
+    t.appendChild(el("td",null,r.fascia));
+    t.appendChild(el("td",{class:"p"},nf2.format(r.unitario)));
+    t.appendChild(el("td",{class:"p"},nf2.format(r.totale)));
+    var tdx=el("td");
+    var x=el("button",{class:"del",type:"button","aria-label":"Rimuovi riga"},"×");
+    x.onclick=function(){
+      S.righe=S.righe.filter(function(q){ return q.id!==r.id; });
+      set(K.righe,S.righe); renderRighe();
+    };
+    tdx.appendChild(x); t.appendChild(tdx);
+    tb.appendChild(t);
+  });
+  tab.appendChild(tb);
+
+  var tf=el("tfoot");
+  function tot(lbl,val,cls){
+    var t=el("tr",{class:cls||""});
+    var a=el("td",{colspan:"4"},lbl); a.style.textAlign="right";
+    t.appendChild(a);
+    t.appendChild(el("td",{class:"p"},nf2.format(val)));
+    t.appendChild(el("td"));
+    tf.appendChild(t);
+  }
+  tot("Totale preventivo",imponibile,"imp gtot");
+  tab.appendChild(tf);
+  tw.appendChild(tab);
+  wrap.appendChild(tw);
+}
+
+function riprendi(r){
+  var p=null;
+  cat.prodotti.forEach(function(x){ if(x.id===r.prodottoId) p=x; });
+  if(!p) return;
+  S.prodottoId=p.id; S.varianteId=r.varianteId; S.qta=r.qta;
+  S.opzioni=JSON.parse(JSON.stringify(r.opzioni));
+  renderTutto();
+  document.querySelector(".workbench").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function testoPreventivo(){
+  var righe=["PREVENTIVO — "+new Date().toLocaleDateString("it-IT"),""];
+  var imponibile=0;
+  S.righe.forEach(function(r,i){
+    imponibile+=r.totale;
+    righe.push((i+1)+". "+r.prodotto+" · "+r.variante+" — "+nf0.format(r.qta)+" pz");
+    if(r.lavorazioni.length) righe.push("   Lavorazioni: "+r.lavorazioni.join(", "));
+    righe.push("   "+nf2.format(r.unitario)+" €/pz  =  "+nf2.format(r.totale)+" €");
+  });
+  imponibile=r2(imponibile);
+  righe.push("");
+  righe.push("Totale preventivo: "+nf2.format(imponibile)+" €");
+  righe.push("");
+  righe.push("Il prezzo unitario dipende dalla fascia di quantità raggiunta. Preventivo indicativo, non impegnativo.");
+  return righe.join("\n");
+}
+
+function negliAppunti(testo,esito){
+  function ok(){ esito.textContent="Copiato negli appunti."; esito.className="esito"; }
+  function ko(){ esito.textContent="Copia non consentita dal browser: seleziona il testo manualmente."; esito.className="esito ko"; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(testo).then(ok,ko);
+  } else ko();
+  setTimeout(function(){ if(esito.className==="esito") esito.textContent=""; },4000);
+}
+
+/* ======================= editor listino ======================= */
+function fileDataJs(){
+  /* gli array di soli numeri vanno su una riga sola: il file resta leggibile */
+  var j=JSON.stringify(cat,null,2).replace(
+    /\[\s+((?:-?[\d.]+|null)(?:,\s+(?:-?[\d.]+|null))*)\s+\]/g,
+    function(m,g){ return "["+g.replace(/\s+/g," ")+"]"; }
+  );
+  return "/* Listino generato dal configuratore il "+new Date().toLocaleString("it-IT")+
+         " */\n\n"+"window.CATALOGO = "+j+";\n";
+}
+
+function tuttoZero(o){
+  if(o.prezzo!=null) return !o.prezzo;
+  if(o.prezzi){
+    for(var i=0;i<o.prezzi.length;i++) if(o.prezzi[i]) return false;
+    return true;
+  }
+  return true;
+}
+
+function renderEditor(){
+  var p=prodotto(), grid=document.getElementById("edGrid"); svuota(grid);
+  var etichetteFasce=p.fasce.map(function(f){ return f.etichetta; });
+
+  function fmt(v){ return v==null ? "" : (Math.round(v*100)/100).toFixed(2); }
+  function dopo(){ aggiornaDopoEdit(); }
+
+  /* Un campo prezzo. ammetteVuoto: svuotarlo vale "prezzo non definito". */
+  function campo(etichetta,leggi,scrivi,ammetteVuoto){
+    var inp=el("input",{type:"number",step:"0.01",min:"0","aria-label":etichetta});
+    inp.value=fmt(leggi());
+    if(ammetteVuoto) inp.placeholder="—";
+    inp.onchange=function(){
+      var testo=inp.value.trim();
+      if(!testo){
+        if(ammetteVuoto){ scrivi(null); dopo(); }
+        else inp.value=fmt(leggi());
+        return;
+      }
+      var n=parseFloat(testo.replace(",","."));
+      if(isNaN(n)||n<0){ inp.value=fmt(leggi()); return; }
+      scrivi(r2(n)); dopo();
+    };
+    return inp;
+  }
+  function scatola(titolo,teste){
+    var b=el("div",{class:"ed-box"});
+    b.appendChild(el("h3",null,titolo));
+    var tab=el("table",{class:"ed-tab"}), thead=el("thead"), tr=el("tr");
+    teste.forEach(function(t){ tr.appendChild(el("th",null,t)); });
+    thead.appendChild(tr); tab.appendChild(thead);
+    var tb=el("tbody"); tab.appendChild(tb);
+    b.appendChild(tab); grid.appendChild(b);
+    return tb;
+  }
+  function rigaConCampi(tb,nome,quanti,leggi,scrivi,ammetteVuoto){
+    var t=el("tr");
+    t.appendChild(el("td",null,nome));
+    for(var i=0;i<quanti;i++){
+      (function(i){
+        var td=el("td");
+        td.appendChild(campo(nome+" "+(etichetteFasce[i]||""),
+          function(){ return leggi(i); },
+          function(n){ scrivi(i,n); }, ammetteVuoto));
+        t.appendChild(td);
+      })(i);
+    }
+    tb.appendChild(t);
+  }
+
+  /* costo unita' per fascia — lasciare vuoto significa "da definire" */
+  var tbBase=scatola("Costo unità — "+p.nome, [p.varianti.etichetta].concat(etichetteFasce));
+  p.varianti.voci.forEach(function(v){
+    rigaConCampi(tbBase, v.nome, p.fasce.length,
+      function(i){ return v.prezzi ? v.prezzi[i] : null; },
+      function(i,n){ if(!v.prezzi) v.prezzi=[]; v.prezzi[i]=n; }, true);
+  });
+
+  /* lavorazioni: a prezzo unico oppure una per fascia, secondo come sono scritte */
+  var fisse=[], perFascia=[];
+  p.opzioni.forEach(function(g){
+    function raccogli(nome,o){
+      if(tuttoZero(o) && o.prezzo!=null) return;   /* la voce "nessuna" non si quota */
+      if(o.prezzo!=null) fisse.push({nome:nome,o:o});
+      else if(o.prezzi && !tuttoZero(o)) perFascia.push({nome:nome,o:o});
+    }
+    if(g.tipo==="esclusiva") g.voci.forEach(function(v){ raccogli(g.etichetta+" ("+v.nome+")",v); });
+    else raccogli(g.etichetta,g);
+  });
+
+  if(fisse.length){
+    var tbF=scatola("Lavorazioni · prezzo unico",["Servizio","€/pz"]);
+    fisse.forEach(function(r){
+      rigaConCampi(tbF, r.nome, 1,
+        function(){ return r.o.prezzo; },
+        function(i,n){ r.o.prezzo = n==null ? 0 : n; }, false);
+    });
+  }
+  if(perFascia.length){
+    var tbS=scatola("Lavorazioni · prezzo per fascia",["Servizio"].concat(etichetteFasce));
+    perFascia.forEach(function(r){
+      rigaConCampi(tbS, r.nome, p.fasce.length,
+        function(i){ return r.o.prezzi[i]; },
+        function(i,n){ r.o.prezzi[i] = n==null ? 0 : n; }, false);
+    });
+  }
+
+  document.getElementById("edOut").value=fileDataJs();
+}
+
+
+
+/* ======================= orchestrazione ======================= */
+function setQta(q){
+  q=Math.max(1,Math.round(q||0));
+  S.qta=q;
+  document.getElementById("qta").value=q;
+  var rng=document.getElementById("qtaRange");
+  if(q>parseInt(rng.max,10)) rng.max=q;
+  rng.value=q;
+  renderCalcolo();
+}
+
+/* Varianti e opzioni vengono ricostruite a ogni ricalcolo (i prezzi in etichetta
+   cambiano con la fascia): riporta il focus sul controllo che lo aveva, altrimenti
+   la navigazione da tastiera si interrompe a ogni scelta. */
+function conFocusConservato(fn){
+  var a=document.activeElement, nome=null, val=null;
+  if(a && a.tagName==="INPUT" && (a.type==="radio"||a.type==="checkbox")){
+    nome=a.name||null; val=a.value;
+  }
+  fn();
+  if(nome){
+    var n=document.querySelector('input[name="'+nome+'"][value="'+val+'"]');
+    if(n) n.focus();
+  }
+}
+
+function renderCalcolo(){
+  var p=prodotto(), c=calcola(p,S.varianteId,S.qta,S.opzioni);
+  conFocusConservato(function(){
+    renderVarianti();
+    renderOpzioni();
+  });
+  renderNastro(c);
+  renderAnteprima();
+  renderRiepilogo(c);
+  renderCommerciale();
+}
+
+/* Aggiornamento leggero dopo una modifica nell'editor: non ricostruisce l'editor
+   stesso, cosi' il campo che stai compilando non sparisce da sotto il cursore. */
+function aggiornaDopoEdit(){
+  renderCalcolo();
+  renderRighe();
+  document.getElementById("edOut").value=fileDataJs();
+}
+
+function renderTutto(){
+  renderTabs();
+  renderProdotto();
+  initAnteprima();
+  renderQta();
+  renderCalcolo();
+  renderRighe();
+  renderEditor();
+}
+
+/* --- tema: auto → chiaro → scuro --- */
+var temi=["auto","light","dark"], nomiTema={auto:"auto",light:"chiaro",dark:"scuro"};
+function applicaTema(t){
+  if(t==="auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme",t);
+  document.getElementById("btnTema").textContent="Tema: "+nomiTema[t];
+  set(K.tema,t);
+}
+
+/* --- avvio --- */
+function avvio(){
+  var p=cat.prodotti[0];
+  caricaPreimpostato(p);
+
+  /* l'anteprima si costruisce in renderTutto: poi cambiano solo le classi */
+
+  applicaTema(get(K.tema)||"auto");
+  document.getElementById("btnTema").onclick=function(){
+    var ora=get(K.tema)||"auto";
+    applicaTema(temi[(temi.indexOf(ora)+1)%temi.length]);
+  };
+
+  var oggi=new Date().toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"});
+  document.getElementById("dataOggi").textContent=oggi;
+  document.getElementById("stampaData").textContent=oggi;
+  document.getElementById("pieNote").textContent=cat.note||"";
+
+  document.getElementById("qta").oninput=function(){ setQta(parseInt(this.value,10)); };
+  document.getElementById("qtaRange").oninput=function(){ setQta(parseInt(this.value,10)); };
+  document.getElementById("qtaMeno").onclick=function(){ setQta(S.qta-1); };
+  document.getElementById("qtaPiu").onclick=function(){ setQta(S.qta+1); };
+
+  document.getElementById("btnAdd").onclick=aggiungiRiga;
+
+  /* La classe sul body decide quale sezione finisce nella stampa. Si usa
+     classList per non cancellare eventuali classi di chi ospita la pagina, e
+     si ripulisce su afterprint: un timeout non basta, perche' Firefox genera
+     l'anteprima in modo asincrono. */
+  function stampa(classe){
+    var b=document.body;
+    b.classList.remove("p-prev","p-tab");
+    b.classList.add(classe);
+    function pulisci(){ b.classList.remove("p-prev","p-tab"); }
+    if(window.onafterprint!==undefined) window.onafterprint=pulisci;
+    else setTimeout(pulisci,1500);
+    try{ window.print(); }
+    catch(e){
+      pulisci();
+      alert("La stampa e' bloccata in questa finestra. Apri la pagina in una "+
+            "scheda del browser (index.html) e riprova.");
+    }
+  }
+  document.getElementById("btnStampa").onclick=function(){ stampa("p-prev"); };
+  document.getElementById("btnStampaTab").onclick=function(){ stampa("p-tab"); };
+  document.getElementById("btnCopiaTab").onclick=function(){
+    negliAppunti(testoCommerciale(),document.getElementById("esitoTab"));
+  };
+  document.getElementById("btnCopia").onclick=function(){
+    if(!S.righe.length){
+      var e=document.getElementById("esitoCopia");
+      e.textContent="Il preventivo è vuoto."; e.className="esito ko"; return;
+    }
+    negliAppunti(testoPreventivo(),document.getElementById("esitoCopia"));
+  };
+  document.getElementById("btnSvuota").onclick=function(){
+    S.righe=[]; set(K.righe,S.righe); renderRighe();
+  };
+
+  document.getElementById("btnCopiaJson").onclick=function(){
+    negliAppunti(document.getElementById("edOut").value,document.getElementById("esitoEd"));
+  };
+
+  renderTutto();
+}
+
+avvio();
+})();
+</script>
+</body>
+</html>
