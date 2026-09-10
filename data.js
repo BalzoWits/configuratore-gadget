@@ -33,7 +33,12 @@ window.CATALOGO = {
         "Ampia area per la personalizzazione",
         "Disponibile in diverse capacita' e colori"
       ],
-      "qtaMinima": 1,
+      "qtaMinima": 10,
+      /* Passo di ordinazione: si ordina 10, 20, 30... e non 31.
+         Serve a togliere l'anomalia al confine di fascia, dove il prezzo
+         scende: a scelta libera 31 pezzi costerebbero meno di 30.
+         Metti 1 per lasciare la quantita' libera. */
+      "passo": 10,
 
       /* Fasce di quantita'. "riferimento" e' la quantita' usata come esempio
          nella tabella commerciale e nelle pastiglie di scelta rapida.
@@ -119,10 +124,11 @@ window.CATALOGO = {
                            "valori": ["1lato", "2lati"] },
           "catenella":   { "img": "img/catenella.png", "opzione": "portachiavi",
                            "valori": ["catenella"] },
-          "dati":        { "img": "img/dati.png", "opzione": "dati" },
-          "anello":      { "img": "img/portachiavi.png", "opzione": "portachiavi",
-                           "valori": ["anello"], "separato": true,
-                           "didascalia": "Anello portachiavi" }
+          "dati":        { "img": "img/dati.png", "opzione": "dati" }
+          /* Per la voce "Anello" non c'e' un'immagine: quella disponibile
+             (img/portachiavi.png) mostra un portachiavi in gomma
+             personalizzato, non l'anellino metallico del listino. Quando
+             arriva la foto giusta, si aggiunge qui una riga come le altre. */
         }
       },
 

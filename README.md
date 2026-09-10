@@ -55,6 +55,42 @@ tornano sempre col prezzo unitario, e unitario × pezzi col totale.
 Il riepilogo segnala anche quando **aumentare la quantità costa meno**,
 confrontando i totali ai punti di rottura delle fasce.
 
+### Perché le quantità vanno a multipli di 10
+
+Con i prezzi a fascia e la quantità libera nasce un'assurdità: 30 pezzi costano
+165,00 € ma 31 ne costano 155,00, perché il trentunesimo fa scattare la fascia
+più economica. Vale per 31 e 32 pezzi (a 33 si pareggia).
+
+Il campo `"passo": 10` risolve il problema alla radice: si ordina 10, 20, 30,
+40… e le quantità che generano l'assurdità non sono più selezionabili. Il totale
+cresce sempre — verificato su 3 modelli × 3 configurazioni × 30 quantità.
+
+Mentre digiti, il valore resta libero così il campo non salta sotto le dita; si
+allinea quando lasci il campo. Pulsanti, cursore e pastiglie producono solo
+quantità valide, e se la quantità non è ordinabile compare un avviso col
+pulsante per correggerla.
+
+Metti `"passo": 1` per tornare alla quantità libera.
+
+### Perché non c'è un prezzo unico più uno sconto
+
+Sarebbe più pulito, ma il listino del fornitore **non è riducibile** a una
+percentuale: ogni voce ha la sua curva di sconto implicito.
+
+| Voce | 31 - 50 | 51+ |
+|---|---|---|
+| 2 GB | −6,25% | −9,38% |
+| 4 GB | −5,56% | −8,33% |
+| 8 GB | −7,89% | −10,53% |
+| Incisione 1 lato | −10,00% | −20,00% |
+| Incisione 2 lati | −7,14% | −14,29% |
+| Portachiavi | −12,50% | −25,00% |
+| Caricamento dati | −30,00% | −60,00% |
+
+Dal −5,6% del 4 GB al −60% del caricamento dati: nessuna percentuale unica
+riproduce questi numeri. Un prezzo unico più sconto sarebbe **più semplice ma
+diverso** dal listino, e andrebbe concordato col fornitore.
+
 ### Oltre i 100 pezzi
 
 Il listino del fornitore si ferma a 100 pezzi. L'ultima fascia è aperta

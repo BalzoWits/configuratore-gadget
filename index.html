@@ -634,10 +634,12 @@ function totaleA(p,qta){
 /* Confronta i totali sui punti di rottura degli scaglioni e trova la quantita'
    piu' conveniente sopra e sotto quella corrente. */
 function convenienza(p,qta){
-  var minQ = p.qtaMinima||p.fasce[0].min, cand=[];
+  var minQ = minQta(p), passo = passoQta(p), cand=[];
   p.fasce.forEach(function(f){
-    cand.push(f.min);
-    if(f.max!=null) cand.push(f.max);
+    /* la prima quantita' ordinabile che fa scattare la fascia, e l'ultima
+       che ci rientra: con un passo, 31 e 50 diventano 40 e 50 */
+    cand.push(Math.ceil(f.min/passo)*passo);
+    if(f.max!=null) cand.push(Math.floor(f.max/passo)*passo);
   });
   cand.push(minQ);
   cand = cand.filter(function(q,i,a){ return q>=minQ && a.indexOf(q)===i && q!==qta; });
@@ -745,7 +747,10 @@ function renderProdotto(){
   var ul=document.getElementById("prodTratti"); svuota(ul);
   (p.caratteristiche||[]).forEach(function(t){ ul.appendChild(el("li",null,t)); });
   document.getElementById("lblVariante").textContent=p.varianti.etichetta||"Variante";
-  document.getElementById("hintMin").textContent="minimo "+nf0.format(p.qtaMinima)+" pz";
+  var passo=passoQta(p);
+  document.getElementById("hintMin").textContent =
+    "minimo "+nf0.format(minQta(p))+" pz"+
+    (passo>1 ? ", a multipli di "+passo : "");
 }
 
 function renderVarianti(){
@@ -769,12 +774,13 @@ function renderVarianti(){
 
 function renderQta(){
   var p=prodotto();
-  document.getElementById("qta").value=S.qta;
-  document.getElementById("qta").min=1;
+  var passo=passoQta(p), minimo=minQta(p);
+  var campo=document.getElementById("qta");
+  campo.value=S.qta; campo.min=minimo; campo.step=passo;
   var rng=document.getElementById("qtaRange");
   var ultima=p.fasce[p.fasce.length-1];
-  rng.min = Math.max(1, (p.fasce[0].min||1) - 20);
-  rng.max = Math.max(S.qta, (ultima.max || ultima.min*5));
+  rng.min=minimo; rng.step=passo;
+  rng.max=Math.max(S.qta, ultima.max || qtaRiferimento(ultima)*3);
   rng.value=S.qta;
 
   var chips=document.getElementById("qtaChips"); svuota(chips);
@@ -914,6 +920,14 @@ function renderRiepilogo(c){
       txt(" non è confermato dal fornitore: usalo come stima, non in offerta.")
     ]);
   }
+  if(passoQta(p)>1 && !qtaValida(p,S.qta)){
+    var proposta=allinea(p,S.qta);
+    avviso("wr","Non ordinabile",[
+      txt("Gli ordini vanno a multipli di "),forte(passoQta(p)+" pz"),
+      txt(", quindi "+nf0.format(S.qta)+" pz non e' una quantita' valida. "),
+      vai(proposta)
+    ]);
+  }
   if(c.sottoMinimo){
     avviso("wr","Sotto minimo",[
       txt("La quantità minima d'ordine è "),forte(nf0.format(p.qtaMinima)+" pz"),
@@ -945,6 +959,21 @@ function renderRiepilogo(c){
    Le stesse strutture servono al rendering, alla stampa e alla copia. */
 
 function qtaRiferimento(f){ return f.riferimento || f.min; }
+
+/* Il passo di ordinazione: con "passo": 10 si ordina 10, 20, 30... e non 31.
+   Serve a togliere l'anomalia al confine di fascia, dove il prezzo scende:
+   a scelta libera 31 pezzi costerebbero meno di 30. */
+function passoQta(p){ return p.passo && p.passo > 1 ? p.passo : 1; }
+function minQta(p){ return p.qtaMinima || passoQta(p); }
+function allinea(p, q){
+  var passo = passoQta(p);
+  q = Math.round(q || 0);
+  if (passo > 1) q = Math.round(q / passo) * passo;
+  return Math.max(minQta(p), q);
+}
+function qtaValida(p, q){
+  return q >= minQta(p) && q % passoQta(p) === 0;
+}
 
 /* Le tabelle per il cliente: una colonna per fascia di quantita', come il
    listino del fornitore. Colonne semplici, nessuna cella a due righe: e' cio'
@@ -1184,8 +1213,11 @@ function negliAppunti(testo,esito){
 }
 
 /* ======================= orchestrazione ======================= */
-function setQta(q){
-  q=Math.max(1,Math.round(q||0));
+/* allineato=false mentre si digita, cosi' il campo non salta sotto le dita;
+   l'allineamento scatta quando si lascia il campo o si usano i comandi */
+function setQta(q,allineato){
+  var p=prodotto();
+  q = allineato ? allinea(p,q) : Math.max(1,Math.round(q||0));
   S.qta=q;
   document.getElementById("qta").value=q;
   var rng=document.getElementById("qtaRange");
@@ -1257,10 +1289,18 @@ function avvio(){
   document.getElementById("stampaData").textContent=oggi;
   document.getElementById("pieNote").textContent=cat.note||"";
 
-  document.getElementById("qta").oninput=function(){ setQta(parseInt(this.value,10)); };
-  document.getElementById("qtaRange").oninput=function(){ setQta(parseInt(this.value,10)); };
-  document.getElementById("qtaMeno").onclick=function(){ setQta(S.qta-1); };
-  document.getElementById("qtaPiu").onclick=function(){ setQta(S.qta+1); };
+  var campoQta=document.getElementById("qta");
+  campoQta.oninput=function(){ setQta(parseInt(this.value,10),false); };
+  campoQta.onchange=function(){ setQta(parseInt(this.value,10),true); };
+  document.getElementById("qtaRange").oninput=function(){ setQta(parseInt(this.value,10),true); };
+  document.getElementById("qtaMeno").onclick=function(){
+    var passo=passoQta(prodotto());
+    setQta(Math.ceil(S.qta/passo)*passo-passo,true);
+  };
+  document.getElementById("qtaPiu").onclick=function(){
+    var passo=passoQta(prodotto());
+    setQta(Math.floor(S.qta/passo)*passo+passo,true);
+  };
 
   document.getElementById("btnAdd").onclick=aggiungiRiga;
 
