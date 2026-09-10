@@ -5,11 +5,12 @@
    quando la pagina viene aperta con doppio click (protocollo file://).
 
    COME SI FORMA IL PREZZO
-     1. costo unita' del modello nella fascia raggiunta
-     2. piu' il prezzo delle lavorazioni scelte, nella stessa fascia
-     3. meno l'eventuale sconto della fascia (oggi zero: gli sconti sono gia'
-        dentro i prezzi, che scendono al crescere della quantita')
-     4. per il numero di pezzi = totale
+     1. costo unita' del modello + prezzo delle lavorazioni = prezzo di listino
+     2. meno lo sconto della fascia di quantita' raggiunta = prezzo unitario
+     3. per il numero di pezzi = totale
+
+   Lo sconto si applica a tutto, lavorazioni comprese: un solo prezzo per
+   voce e una sola percentuale per fascia.
 
    Due modi di scrivere un prezzo:
      "prezzo": 0.80              valore unico, uguale in tutte le fasce
@@ -21,7 +22,7 @@
    ========================================================================= */
 
 window.CATALOGO = {
-  "note": "Il costo unita' e il prezzo delle lavorazioni scendono al crescere della quantita': ogni fascia ha i suoi valori.",
+  "note": "Il prezzo di listino non dipende dalla quantita': lo sconto della fascia si applica al totale, lavorazioni comprese.",
 
   "prodotti": [
     {
@@ -40,27 +41,32 @@ window.CATALOGO = {
          Metti 1 per lasciare la quantita' libera. */
       "passo": 10,
 
-      /* Fasce di quantita'. "riferimento" e' la quantita' usata come esempio
+      /* SCALA DEGLI SCONTI — il prezzo di listino e' uno, lo sconto dipende
+         dalla quantita'. "riferimento" e' la quantita' usata come esempio
          nella tabella commerciale e nelle pastiglie di scelta rapida.
-         "sconto" e' una percentuale sul totale: oggi zero perche' gli sconti
-         sono gia' nei prezzi di ogni fascia. Se un domani servisse uno sconto
-         ulteriore (promozioni, clienti fissi), basta valorizzarlo qui.
 
-         NOTA: il listino del fornitore si ferma a 100 pezzi. L'ultima fascia
-         e' aperta (51 e oltre) per poter preventivare ordini piu' grandi, ma
-         oltre i 100 pezzi i prezzi vanno confermati. */
+         VINCOLO DA RISPETTARE quando si cambia la scala: con passo 10, una
+         fascia non puo' estendersi troppo prima di un salto di sconto,
+         altrimenti ordinare di piu' costa meno. La regola e'
+             quantita' massima = passo x (1 - sconto nuovo) / (sconto nuovo - vecchio)
+         Per un salto di 5 punti: entro 190 pz da 0 a 5%, 180 da 5 a 10%,
+         170 da 10 a 15%, 160 da 15 a 20% (e con gli arrotondamenti conviene
+         stare un gradino sotto). L'ultima fascia e' aperta e non ha salti
+         dopo di se', quindi non pone vincoli.
+         Il collaudo lo verifica su ogni quantita' da 10 a 400. */
       "fasce": [
-        { "min": 1,  "max": 30,   "etichetta": "1 - 30 pz",  "sconto": 0, "riferimento": 30 },
-        { "min": 31, "max": 50,   "etichetta": "31 - 50 pz", "sconto": 0, "riferimento": 50 },
-        { "min": 51, "max": null, "etichetta": "51+ pz",     "sconto": 0, "riferimento": 100 }
+        { "min": 10,  "max": 30,   "etichetta": "10 - 30 pz", "sconto": 0,  "riferimento": 30 },
+        { "min": 40,  "max": 60,   "etichetta": "40 - 60 pz", "sconto": 5,  "riferimento": 40 },
+        { "min": 70,  "max": 90,   "etichetta": "70 - 90 pz", "sconto": 10, "riferimento": 70 },
+        { "min": 100, "max": null, "etichetta": "100+ pz",    "sconto": 15, "riferimento": 100 }
       ],
 
       "varianti": {
         "etichetta": "Modello",
         "voci": [
-          { "id": "2gb", "nome": "2 GB", "prezzi": [3.20, 3.00, 2.90] },
-          { "id": "4gb", "nome": "4 GB", "prezzi": [3.60, 3.40, 3.30] },
-          { "id": "8gb", "nome": "8 GB", "prezzi": [3.80, 3.50, 3.40] }
+          { "id": "2gb", "nome": "2 GB", "prezzo": 3.20 },
+          { "id": "4gb", "nome": "4 GB", "prezzo": 3.60 },
+          { "id": "8gb", "nome": "8 GB", "prezzo": 3.80 }
         ]
       },
 
@@ -85,8 +91,8 @@ window.CATALOGO = {
           "tipo": "esclusiva",
           "voci": [
             { "id": "no",    "nome": "Nessuna incisione", "prezzo": 0 },
-            { "id": "1lato", "nome": "1 lato",  "prezzi": [1.00, 0.90, 0.80] },
-            { "id": "2lati", "nome": "2 lati",  "prezzi": [1.40, 1.30, 1.20] }
+            { "id": "1lato", "nome": "1 lato",  "prezzo": 1.00 },
+            { "id": "2lati", "nome": "2 lati",  "prezzo": 1.40 }
           ]
         },
         {
@@ -97,12 +103,11 @@ window.CATALOGO = {
           "tipo": "esclusiva",
           "voci": [
             { "id": "no",        "nome": "Nessuno",   "prezzo": 0 },
-            { "id": "catenella", "nome": "Catenella", "prezzi": [0.40, 0.35, 0.30] },
-            { "id": "anello",    "nome": "Anello",    "prezzi": [0.40, 0.35, 0.30] }
+            { "id": "catenella", "nome": "Catenella", "prezzo": 0.40 },
+            { "id": "anello",    "nome": "Anello",    "prezzo": 0.40 }
           ]
         },
-        { "id": "dati", "etichetta": "Caricamento dati", "tipo": "flag",
-          "prezzi": [0.50, 0.35, 0.20] }
+        { "id": "dati", "etichetta": "Caricamento dati", "tipo": "flag", "prezzo": 0.50 }
       ],
 
       /* ANTEPRIMA — immagini che si accendono con le scelte.

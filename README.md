@@ -13,97 +13,81 @@ img/         le immagini dell'anteprima
 
 ## Come funziona il calcolo
 
-1. La quantità totale determina la **fascia** raggiunta.
-2. **Costo unità** del modello in quella fascia **+ lavorazioni** scelte, prese
-   dalla stessa fascia, = prezzo unitario.
+1. **Costo unità** del modello **+ lavorazioni** scelte = prezzo di listino.
+2. **Meno lo sconto** della fascia di quantità raggiunta = prezzo unitario.
 3. **Per il numero di pezzi** = totale.
 
-Il prezzo di ogni voce scende al crescere della quantità: lo sconto è dentro il
-listino, non applicato dopo.
+Lo sconto si applica a tutto, lavorazioni comprese: un prezzo per voce e una
+percentuale per fascia. Due sole leve da governare.
 
-### Il listino
+### Prezzi di listino
 
-| Modello | 1 - 30 | 31 - 50 | 51+ |
-|---|---|---|---|
-| 2 GB | 3,20 | 3,00 | 2,90 |
-| 4 GB | 3,60 | 3,40 | 3,30 |
-| 8 GB | 3,80 | 3,50 | 3,40 |
+| Voce | €/pz |
+|---|---|
+| Chiavetta 2 GB | 3,20 |
+| Chiavetta 4 GB | 3,60 |
+| Chiavetta 8 GB | 3,80 |
+| Incisione laser 1 lato | +1,00 |
+| Incisione laser 2 lati | +1,40 |
+| Portachiavi (catenella o anello) | +0,40 |
+| Caricamento dati | +0,50 |
 
-| Lavorazione | 1 - 30 | 31 - 50 | 51+ |
-|---|---|---|---|
-| Incisione laser 1 lato | +1,00 | +0,90 | +0,80 |
-| Incisione laser 2 lati | +1,40 | +1,30 | +1,20 |
-| Portachiavi: catenella | +0,40 | +0,35 | +0,30 |
-| Portachiavi: anello | +0,40 | +0,35 | +0,30 |
-| Caricamento dati | +0,50 | +0,35 | +0,20 |
-
-Catenella e anello stanno nella stessa colonna del listino del fornitore e
-costano uguale: sono **alternative**, si aggancia una cosa sola al foro. Il
+Catenella e anello sono **alternative**: si aggancia una cosa sola al foro. Il
 colore non ha sovrapprezzo.
 
-Riga di controllo — 2 GB con incisione 2 lati, catenella e caricamento dati:
+### Scala degli sconti
 
-| Q.tà | Costo unità | Lavorazioni | €/pz | Totale |
-|---|---|---|---|---|
-| 30 | 3,20 | 1,40 + 0,40 + 0,50 | 5,50 | 165,00 |
-| 50 | 3,00 | 1,30 + 0,35 + 0,35 | 5,00 | 250,00 |
-| 100 | 2,90 | 1,20 + 0,30 + 0,20 | 4,60 | 460,00 |
+| Quantità | Sconto |
+|---|---|
+| 10 - 30 | listino |
+| 40 - 60 | −5% |
+| 70 - 90 | −10% |
+| 100+ | −15% |
 
-Ogni voce è arrotondata a 2 decimali prima della somma: le cifre a schermo
-tornano sempre col prezzo unitario, e unitario × pezzi col totale.
+Esempio — 2 GB con incisione 2 lati, catenella e caricamento dati:
+listino 3,20 + 1,40 + 0,40 + 0,50 = **5,50 €/pz**.
 
-Il riepilogo segnala anche quando **aumentare la quantità costa meno**,
-confrontando i totali ai punti di rottura delle fasce.
+| Q.tà | Sconto | €/pz | Totale |
+|---|---|---|---|
+| 30 | listino | 5,50 | 165,00 |
+| 40 | −5% | 5,23 | 209,20 |
+| 70 | −10% | 4,95 | 346,50 |
+| 100 | −15% | 4,68 | 468,00 |
+
+Ogni voce è arrotondata a 2 decimali prima della somma, e lo sconto è una riga
+a sé: le cifre a schermo tornano sempre col prezzo unitario, e unitario ×
+pezzi col totale.
+
+### Il vincolo da rispettare se cambi la scala
+
+Con le quantità a passo fisso, un salto di sconto troppo lontano dall'origine
+fa ricomparire l'assurdità di prima: ordinare di più costa meno. La regola:
+
+```
+quantità massima della fascia = passo × (1 − sconto nuovo) / (sconto nuovo − sconto vecchio)
+```
+
+Con passo 10 e salti di 5 punti: la fascia può arrivare a 190 pz passando da 0
+a −5%, 180 da −5 a −10%, 170 da −10 a −15%, **160** da −15 a −20% — e con gli
+arrotondamenti conviene stare un gradino sotto. È il motivo per cui la scala
+si ferma a −15% con l'ultima fascia aperta: **una fascia senza salti dopo di
+sé non pone vincoli**, quindi 100+ è sicura per sempre.
+
+Se volessi arrivare a −20%, o abbassi la soglia (−20% da 160 pz in su) o riduci
+il salto (−18% invece di −20%). Il collaudo verifica la monotonia su 3 modelli
+× 2 configurazioni × 60 quantità, da 10 a 600 pezzi.
 
 ### Perché le quantità vanno a multipli di 10
 
-Con i prezzi a fascia e la quantità libera nasce un'assurdità: 30 pezzi costano
-165,00 € ma 31 ne costano 155,00, perché il trentunesimo fa scattare la fascia
-più economica. Vale per 31 e 32 pezzi (a 33 si pareggia).
-
-Il campo `"passo": 10` risolve il problema alla radice: si ordina 10, 20, 30,
-40… e le quantità che generano l'assurdità non sono più selezionabili. Il totale
-cresce sempre — verificato su 3 modelli × 3 configurazioni × 30 quantità.
+Senza un passo fisso, con qualunque scala a fasce esistono quantità in cui
+ordinare un pezzo in più costa meno: subito dopo la soglia, il prezzo scende
+prima che la quantità cresca abbastanza. Il campo `"passo": 10` rende quelle
+quantità non selezionabili.
 
 Mentre digiti, il valore resta libero così il campo non salta sotto le dita; si
 allinea quando lasci il campo. Pulsanti, cursore e pastiglie producono solo
 quantità valide, e se la quantità non è ordinabile compare un avviso col
-pulsante per correggerla.
-
-Metti `"passo": 1` per tornare alla quantità libera.
-
-### Perché non c'è un prezzo unico più uno sconto
-
-Sarebbe più pulito, ma il listino del fornitore **non è riducibile** a una
-percentuale: ogni voce ha la sua curva di sconto implicito.
-
-| Voce | 31 - 50 | 51+ |
-|---|---|---|
-| 2 GB | −6,25% | −9,38% |
-| 4 GB | −5,56% | −8,33% |
-| 8 GB | −7,89% | −10,53% |
-| Incisione 1 lato | −10,00% | −20,00% |
-| Incisione 2 lati | −7,14% | −14,29% |
-| Portachiavi | −12,50% | −25,00% |
-| Caricamento dati | −30,00% | −60,00% |
-
-Dal −5,6% del 4 GB al −60% del caricamento dati: nessuna percentuale unica
-riproduce questi numeri. Un prezzo unico più sconto sarebbe **più semplice ma
-diverso** dal listino, e andrebbe concordato col fornitore.
-
-### Oltre i 100 pezzi
-
-Il listino del fornitore si ferma a 100 pezzi. L'ultima fascia è aperta
-(`"max": null`) per poter preventivare ordini più grandi, ma applica i prezzi
-della fascia 51-100: **oltre i 100 pezzi vanno confermati**. La nota sotto la
-tabella commerciale lo dice anche a schermo.
-
-### Sconti sul totale
-
-Ogni fascia ha un campo `"sconto"`, oggi a zero perché gli sconti sono già nei
-prezzi di listino. Se servisse una riduzione ulteriore (una promozione, un
-cliente fisso), basta valorizzarlo: si applica al totale, lavorazioni comprese,
-e compare come riga a sé nel riepilogo.
+pulsante per correggerla. `"passo": 1` torna alla quantità libera.
 
 ## Modificare i prezzi
 
@@ -157,17 +141,17 @@ repository.
   //                contengono gia' lo sconto quantita').
   // Aggiungere uno scaglione = aggiungere una riga qui.
   "fasce": [
-    { "min": 1,  "max": 30,   "etichetta": "1 - 30 pz",  "sconto": 0, "riferimento": 30 },
-    { "min": 31, "max": null, "etichetta": "31+ pz",     "sconto": 0, "riferimento": 50 }
+    { "min": 10, "max": 30,   "etichetta": "10 - 30 pz", "sconto": 0, "riferimento": 30 },
+    { "min": 40, "max": null, "etichetta": "40+ pz",     "sconto": 5, "riferimento": 40 }
   ],
 
   // Le alternative fra cui l'articolo si sceglie: capacita', taglia, colore...
   "varianti": {
     "etichetta": "Modello",
     "voci": [
-      { "id": "s", "nome": "Small", "prezzi": [2.00, 1.80] },
-      { "id": "m", "nome": "Medium", "prezzi": [2.50, 2.30], "provvisorio": true },
-      { "id": "l", "nome": "Large", "prezzi": [null, null] }   // non selezionabile
+      { "id": "s", "nome": "Small", "prezzo": 2.00 },
+      { "id": "m", "nome": "Medium", "prezzo": 2.50, "provvisorio": true },
+      { "id": "l", "nome": "Large", "prezzo": null }   // non selezionabile
     ]
   },
 
